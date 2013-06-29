@@ -1,0 +1,4 @@
+{spawn} = require "child_process"
+
+task 'run', 'Run the test server', ->
+  spawn "coffee", ["server.coffee"], stdio: "inherit"
