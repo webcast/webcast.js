@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<meta charset="utf-8"/>
+<title>Webcast Test</title>
+<script src="libmp3lame.js"></script>
+<script language="javascript" type="text/javascript">
+  var log = function (msg) {
+    var el = document.getElementById("output");
+    el.innerHTML = el.innerHTML + "<br>" + msg;
+  };
+
+  var websocket = new WebSocket("ws://localhost:8080/", "webcast");
+
+  websocket.onopen = function(evt) {
+    log("Websocket connected.");
+    websocket.send(JSON.stringify({
+      type: "hello",
+      data: {
+        mime:  "audio/mpeg",
+        audio: 1
+      }
+    }));
+
+    websocket.send(JSON.stringify({
+      type: "metadata",
+      data: {
+        title: "Demo stream",
+        artist: "The Savonet Team Y'all!"
+      }
+    }));
+  };
+  websocket.onclose = function(evt) {
+    log("Websocket disconnected."); 
+  };
+  websocket.onmessage = function(evt) {
+    log("Websocket message: " + evt.data);
+  };
+  websocket.onerror = function(evt) {
+    log("Websocket error: " + evt.data)
+  };
+
+  var audioContext = new webkitAudioContext;
+
+  var buflen = 4096;
+
+  var lame = Lame.init();
+  Lame.set_bitrate(lame, 128);
+  Lame.set_mode(lame, Lame.JOINT_STEREO);
+  Lame.set_in_samplerate(lame, audioContext.sampleRate);
+  Lame.init_params(lame);
+
+  function onAudioProcess(e) {
+    log("Got buffer.");
+    var encoded = Lame.encode_buffer_ieee_float(
+      lame, e.inputBuffer.getChannelData(0), e.inputBuffer.getChannelData(1) 
+    );
+    websocket.send(encoded.data);
+  }
+
+  function onStream(stream) {
+    log("Got stream.");
+    var mediaStreamSource = audioContext.createMediaStreamSource(stream);
+    log("Created source.");
+
+    // Create buffer processor
+    var node = audioContext.createJavaScriptNode(buflen, 2, 2);
+    log("Created node.");
+
+    mediaStreamSource.connect(node);
+    node.onaudioprocess = onAudioProcess;
+    node.connect(audioContext.destination);
+    log("Connected.");
+  }
+
+  function init() {
+    log("Initializing.");
+    var recordAudio = document.getElementById('record-audio');
+
+    recordAudio.onclick = function () {
+      log("Clicked.");
+      navigator.webkitGetUserMedia({audio:true, video:false}, onStream);
+    };
+  }
+
+  window.addEventListener("load", init, false);
+</script>
+
+<h2>Webcast Test</h2>
+<button id="record-audio">Record</button>
+<div id="output"></div>
+</html>
