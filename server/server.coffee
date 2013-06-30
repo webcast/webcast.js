@@ -35,7 +35,9 @@ wsServer.on "request", (req) ->
         return connection.close()
 
       connection.hello = msg.utf8Data.data
-      return console.log "#{new Date} -- Audio channels: #{connection.hello.audio}, MIME type: #{connection.hello.mime}."
+      console.log "#{new Date} -- MIME type: #{connection.hello.mime}."
+      console.log "#{new Date} -- Audio channels: #{connection.hello.audio.channels}."
+      return console.log "#{new Date} -- Audio bitrate: #{connection.hello.audio.bitrate}."
 
     switch msg.type
       when "utf8"

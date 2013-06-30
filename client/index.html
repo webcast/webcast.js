@@ -10,13 +10,20 @@
 
   var websocket = new WebSocket("ws://localhost:8080/", "webcast");
 
+  var bitrate = 64;
+  var samplerate = 22050;
+
   websocket.onopen = function(evt) {
     log("Websocket connected.");
     websocket.send(JSON.stringify({
       type: "hello",
       data: {
         mime:  "audio/mpeg",
-        audio: 2
+        audio: {
+          channels: 1,
+          bitrate:  bitrate,
+          encoder: "libmp3lame-js"
+        }
       }
     }));
 
@@ -43,15 +50,16 @@
   var buflen = 4096;
 
   var lame = Lame.init();
-  Lame.set_bitrate(lame, 128);
-  Lame.set_mode(lame, Lame.JOINT_STEREO);
-  Lame.set_in_samplerate(lame, audioContext.sampleRate);
+  Lame.set_bitrate(lame, bitrate);
+  Lame.set_mode(lame, Lame.MONO);
+  Lame.set_num_channels(lame, 1);
+  Lame.set_out_samplerate(lame, samplerate);
   Lame.init_params(lame);
 
   function onAudioProcess(e) {
     log("Got buffer.");
     var encoded = Lame.encode_buffer_ieee_float(
-      lame, e.inputBuffer.getChannelData(0), e.inputBuffer.getChannelData(1) 
+      lame, e.inputBuffer.getChannelData(0), e.inputBuffer.getChannelData(0) 
     );
     websocket.send(encoded.data);
   }
@@ -62,7 +70,7 @@
     log("Created source.");
 
     // Create buffer processor
-    var node = audioContext.createJavaScriptNode(buflen, 2, 2);
+    var node = audioContext.createJavaScriptNode(buflen, 1, 1);
     log("Created node.");
 
     mediaStreamSource.connect(node);
