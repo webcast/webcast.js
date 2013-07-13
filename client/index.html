@@ -11,6 +11,8 @@
   var websocket = new WebSocket("ws://localhost:8080/", "webcast");
 
   var bitrate = 64;
+  var channels = channels;
+  var mount = "/foo";
   var samplerate = 22050;
 
   websocket.onopen = function(evt) {
@@ -19,8 +21,10 @@
       type: "hello",
       data: {
         mime:  "audio/mpeg",
+        mount: mount,
         audio: {
-          channels: 1,
+          channels: channels,
+          samplerate: samplerate,
           bitrate:  bitrate,
           encoder: "libmp3lame-js"
         }
@@ -51,8 +55,8 @@
 
   var lame = Lame.init();
   Lame.set_bitrate(lame, bitrate);
-  Lame.set_mode(lame, Lame.MONO);
-  Lame.set_num_channels(lame, 1);
+  Lame.set_mode(lame, channels == 1 ? Lame.MONO : Lame.JOINT_STEREO);
+  Lame.set_num_channels(lame, channels);
   Lame.set_out_samplerate(lame, samplerate);
   Lame.init_params(lame);
 
