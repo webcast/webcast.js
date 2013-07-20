@@ -3,8 +3,6 @@ http      = require "http"
 websocket = require "websocket"
 port      = 8080
 
-fd = fs.openSync "websocket-test.mp3", "w"
-
 server = http.createServer (req, res) ->
   console.log "#{new Date} -- Received request for #{req.url}"
   res.writeHead 404
@@ -18,6 +16,8 @@ wsServer = new websocket.server
   autoAcceptConnections : false
 
 wsServer.on "request", (req) ->
+  fd = null
+
   console.log "#{new Date} -- Connection from #{req.origin}"
 
   connection = req.accept "webcast", req.origin
@@ -40,6 +40,10 @@ wsServer.on "request", (req) ->
       console.log "#{new Date} -- Audio channels: #{connection.hello.audio.channels}."
       if (connection.hello.mime == "audio/mpeg")
         console.log "#{new Date} -- Audio bitrate: #{connection.hello.audio.bitrate}."
+
+      # We only support mp3 and raw PCM for now
+      ext = if connection.hello.mime == "audio/mpeg" then "mp3" else "raw"
+      fd = fs.openSync "websocket-test.#{ext}", "w"
       return
 
     switch msg.type
@@ -47,8 +51,6 @@ wsServer.on "request", (req) ->
         switch msg.utf8Data.type
           when "metadata"
             console.log "#{new Date} -- Got new metadata: #{JSON.stringify(msg.utf8Data.data)}"
-          when "private"
-            console.log "#{new Date} -- Got private message: #{JSON.stringify(msg.utf8Data.data)}"
           else
             console.log "#{new Date} -- Invalid message"
       when "binary"

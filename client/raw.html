@@ -32,12 +32,9 @@
     var buf0 = e.inputBuffer.getChannelData(0);
     var buf1 = e.inputBuffer.getChannelData(1);
     var buflen = buf0.length;
-    //var buf = new Float32Array(2*buflen);
-    //for (i = 0; i < buflen; i++) { buf[2*i] = buf0[i]; buf[2*i+1] = buf1[i] };
     var buf = new Int8Array(2*buflen);
     for (i = 0; i < buflen; i++) { buf[2*i] = buf0[i]*127.; buf[2*i+1] = buf1[i]*127. };
 
-    //var buf = e.inputBuffer.getChannelData(0);
     console.log("Got buffer.");
     websocket.send(buf);
   }
