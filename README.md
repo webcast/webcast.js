@@ -70,8 +70,8 @@ Here is an example of a `hello` frame of a `mp3` stream:
 `metadata` frames are used to transmit punctual metadata information. They are OPTIONAL as some
 binary format such as `ogg/vorbis` are capable of embedding their own metadata information.
 
-The type of a `medatada` frame MUST be `"metadata"` and its data MUST be a JSON-encoded mapping of
-metadata keys and values.
+The type of a `medatada` frame MUST be `"metadata"` and its data MUST be a mapping of metadata keys 
+and values.
 
 Here is an example of a `metadata` frame:
 ```
