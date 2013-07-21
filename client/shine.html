@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <meta charset="utf-8"/>
-<title>Lame Test</title>
-<script src="libmp3lame.js"></script>
+<title>Shine Test</title>
+<script src="libshine.js"></script>
 <script language="javascript" type="text/javascript">
   var audioContext;
   if (typeof webkitAudioContext !== "undefined") {
@@ -13,7 +13,7 @@
   var mount = "/mount";
   var bitrate = 64;
   var channels = 1;
-  var samplerate = 22050;
+  var samplerate = audioContext.sampleRate;
 
   var wsUri = "ws://localhost:8080/";
   var websocket = new WebSocket(wsUri, "webcast");
@@ -28,7 +28,7 @@
           channels: channels,
           samplerate: samplerate,
           bitrate: bitrate,
-          encoder: "libmp3lame"
+          encoder: "libshine"
         }
       }
     }));
@@ -37,17 +37,20 @@
   websocket.onmessage = function(evt) { console.log("Websocket message: " + evt.data); };
   websocket.onerror = function(evt) { console.log("Websocket error: " + evt.data) };
 
-  var lame = Lame.init();
-  Lame.set_bitrate(lame, bitrate);
-  Lame.set_mode(lame, channels == 1 ? Lame.MONO : Lame.JOINT_STEREO);
-  Lame.set_num_channels(lame, channels);
-  Lame.set_out_samplerate(lame, samplerate);
-  Lame.init_params(lame);
+  var shine = new Shine({
+    bitrate: bitrate,
+    samplerate: samplerate,
+    channels: channels,
+    mode: channels == 1 ? Shine.MONO : Shine.STEREO
+  });
 
   function processBuffer(buf) {
     console.log("Got buffer.");
-    var encoded = Lame.encode_buffer_ieee_float(lame, buf.getChannelData(0), buf.getChannelData(0));
-    websocket.send(encoded.data.buffer.slice(encoded.data.byteOffset, encoded.data.length));
+    var encoded = shine.encode([buf.getChannelData(0)]);
+    if (encoded.length > 0) {
+      console.log("Sending " + encoded.length + " bytes of compressed data");
+      websocket.send(encoded.buffer.slice(encoded.byteOffset, encoded.length));
+    }
   }
 
   function onAudioProcess(e) {
@@ -122,7 +125,7 @@
   window.addEventListener("load", init, false);
 </script>
 
-<h2>Lame Test</h2>
+<h2>Shine Test</h2>
 <button id="record-audio">Record</button>
 <button id="play-audio">Play</button>
 <button id="send-metadata">Send metadata</button>

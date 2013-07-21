@@ -90,7 +90,7 @@ How to test?
 #### Client
 
 The `client/` directory of this repository contains two client examples, one sending mp3 encoded data,
-using `lame` and another one sending raw PCM data. 
+using `lame`, `shine` and a last one sending raw PCM data. 
 
 You can start the client by executing `make` in the repository. You will need a functional `python` binary 
 with the `SimpleHTTPServer` module.

@@ -3,8 +3,11 @@
 <title>Raw Test</title>
 <script language="javascript" type="text/javascript">
   var audioContext;
-  if (typeof webkitAudioContext !== "undefined") { audioContext = new webkitAudioContext(); }
-  else { audioContext = new AudioContext(); };
+  if (typeof webkitAudioContext !== "undefined") {
+    audioContext = new webkitAudioContext();
+  } else {
+    audioContext = new AudioContext();
+  }
 
   var wsUri = "ws://localhost:8080/";
   var websocket = new WebSocket(wsUri, "webcast");
@@ -36,7 +39,7 @@
     for (i = 0; i < buflen; i++) { buf[2*i] = buf0[i]*127.; buf[2*i+1] = buf1[i]*127. };
 
     console.log("Got buffer.");
-    websocket.send(buf);
+    websocket.send(buf.buffer.slice(buf.byteOffset, buf.length));
   }
 
   function connectStream(source) {
@@ -88,7 +91,7 @@
   window.addEventListener("load", init, false);
 </script>
 
-<h2>Lame Test</h2>
+<h2>Raw Test</h2>
 <button id="record-audio">Record</button>
 <button id="play-audio">Play</button>
 <button id="send-metadata">Send metadata</button>
