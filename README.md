@@ -83,21 +83,71 @@ Here is an example of a `metadata` frame:
 }
 ```
 
+## Webcast API
+
+We also provide a high-level Javascript API for the protocol. It is written in `coffee-script` and located
+at `src/webcast.coffee`. If you do not like caffeine, you can also use the compiled version, located at `lib/webcast.js`.
+
+The API contains several classes:
+
+* `Webcast.Encoder.{Raw, Lame, Shine}`: the set of currently available encoders
+* `Webcast.Socket`: A simple wrapper around `Websockets` that implements the `webcast` protocol.
+* `Webcast.Node`: A wrapper to create a `webcast` node, in-par with the Web Audio API.
+
+The demonstration client discussed in the next secion, contains a complete example. Here's the highlight of its code:
+
+To stream from a `<audio>` element:
+```
+var audioElement = ...; // Find or create the <audio> element.
+var source = audioContext.createMediaElementSource(audioElement);
+
+var encoder = new Webcast.Encoder.Lame({
+  channels: 2,
+  samplerate: 44100,
+  bitrate: 128
+});
+
+var webcast = new Webcast.Node({
+  uri: "ws://localhost:8080/mount",
+  encoder: encoder,
+  context: audioContext,
+  source: source
+});
+
+```
+
+To stream from a Media Stream element:
+```
+navigator.getUserMedia({audio:true, video:false}, function (stream) {
+  var source = audioContext.createMediaStreamSource(stream);
+
+  var encoder = new Webcast.Encoder.Lame({
+    channels: 2,
+    samplerate: 44100,
+    bitrate: 128
+  });
+
+  var webcast = new Webcast.Node({
+    uri: "ws://localhost:8080/mount",
+    encoder: encoder,
+    context: audioContext,
+    source: source
+  });
+```
+
 How to test?
 ------------
 
 #### Client
 
-The `client/` directory of this repository contains 3 client examples, two sending mp3 encoded data, using 
+The `examples/client/` directory of this repository contains a client examples, sending mp3 encoded data, using 
 [lame](https://github.com/akrennmair/libmp3lame-js) and [shine](https://github.com/savonet/shine/tree/master/js)
-and a last one sending raw PCM data. 
+and also sending raw PCM data. 
 
 You can start the client by executing `make` in the repository. You will need a functional `python` binary 
 with the `SimpleHTTPServer` module.
 
-Once started, you can point your browser to [http://localhost:8000/lame.html](http://localhost:8000/lame.html),
-[http://localhost:8000/shine.html](http://localhost:8000/shine.html) or
-[http://localhost:8000/raw.html](http://localhost:8000/raw.html)
+Once started, you can point your browser to [http://localhost:8000/](http://localhost:8000/).
 
 #### Server
 
