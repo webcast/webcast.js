@@ -1,1 +1,1 @@
-../lib/webcast.js
+../../lib/webcast.js
