@@ -94,7 +94,7 @@ The API contains several classes:
 * `Webcast.Socket`: A simple wrapper around `Websockets` that implements the `webcast` protocol.
 * `Webcast.Node`: A wrapper to create a `webcast` node, in-par with the Web Audio API.
 
-The demonstration client discussed in the next secion, contains a complete example. Here's the highlight of its code:
+The demonstration client, discussed in the next secion, contains a complete example. Here's the highlight of its code:
 
 To stream from a `<audio>` element:
 ```
@@ -133,6 +133,7 @@ navigator.getUserMedia({audio:true, video:false}, function (stream) {
     context: audioContext,
     source: source
   });
+});
 ```
 
 How to test?
