@@ -3,7 +3,7 @@
 all: compile serve
 
 compile:
-	coffee -c -o lib src/*.coffee
+	coffee -c -o ../../lib ../../src/*.coffee
 
 serve:
 	python -m SimpleHTTPServer

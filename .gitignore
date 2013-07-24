@@ -1,4 +1,4 @@
 server/node_modules
-server/websocket-test.*
+websocket-test.*
 *.sw*
 node_modules
