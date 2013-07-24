@@ -1,0 +1,22 @@
+{
+  "name": "websocket-client",
+  "description": "Client library for the websocket protocol.",
+  "version": "0.0.1",
+  "homepage": "https://github.com/savonet/websocket",
+  "author": "Romain Beauxis <toots@rastageeks.org",
+  "repository":
+    {
+      "type":"git",
+      "url":"git://github.com/savonet/websocket"
+    },
+  "bugs":
+    {
+      "mail":"toots@rastageeks.org",
+      "url":"http://github.com/savonet/websocket/issues"
+    },
+  "main": "src/websocket.coffee",
+  "engine": {"node": ">= 0.10.7", "npm": "1"},
+  "dependencies": {
+    "coffee-script" : "1.6.3"
+  }
+}

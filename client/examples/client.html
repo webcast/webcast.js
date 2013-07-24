@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<meta charset="utf-8"/>
+<title>Webcase client Test</title>
+<script src="libshine.js"></script>
+<script src="libmp3lame.js"></script>
+<script src="../lib/webcast.js"></script>
+<script language="javascript" type="text/javascript">
+  navigator.getUserMedia  = navigator.getUserMedia || navigator.webkitGetUserMedia || navigator.mozGetUserMedia || navigator.msGetUserMedia;
+
+  // Configuration
+  var wsUri = "ws://localhost:8080/mount";
+  var bitrate = 64;
+  var channels = 1;
+  var samplerate;
+  var encoder = Webcast.Encoder.Lame;
+  var audioContext;
+  var webcastNode;
+
+  function createAudioContext() {
+    if (typeof webkitAudioContext !== "undefined") {
+      audioContext = new webkitAudioContext();
+    } else {
+      audioContext = new AudioContext();
+    }
+    samplerate = audioContext.sampleRate;
+  }
+
+  function killWebcast() {
+    if (webcastNode) {
+      webcastNode.close();
+      webcastNode = null;
+    }
+    if (audioContext) {
+      audioContext = null;
+    }
+  }
+
+  function createWebcastNode(source) {
+    var enc = new encoder({
+      channels: channels,
+      samplerate: samplerate,
+      bitrate: bitrate
+    });
+
+    webcastNode = new Webcast.Node({
+      uri: wsUri,
+      encoder: enc,
+      context: audioContext,
+      source: source
+    });
+  }
+
+  function createAudioSource(url) {
+    var audio = new Audio();
+    audio.src = url;
+    audio.controls = false;
+    audio.autoplay = false;
+    audio.loop = true;
+    return audio;
+  }
+
+  var fileUrl = "http://upload.wikimedia.org/wikipedia/en/4/45/ACDC_-_Back_In_Black-sample.ogg";
+  var fileSource = createAudioSource(fileUrl);
+
+  function init() {
+    console.log("Initializing.");
+
+    document.getElementById('play-audio').onclick = function() {
+      killWebcast();
+
+      createAudioContext();
+      var source = audioContext.createMediaElementSource(fileSource)
+      createWebcastNode(source);
+
+      fileSource.play();
+    };
+
+    document.getElementById('record-audio').onclick = function () {
+      console.log("Clicked record.");
+      navigator.getUserMedia({audio:true, video:false}, function (stream) {
+        killWebcast();
+
+        createAudioContext();
+        var source = audioContext.createMediaStreamSource(stream);
+
+        createWebcastNode(source);
+      }, function(e) {
+        console.log("getUserMedia error: "+e.name+" "+e.message);
+      });
+    };
+
+    document.getElementById('send-metadata').onclick = function () {
+      if (webcastNode) {
+        console.log("Send metadata.");
+        webcastNode.sendMetadata({"title":"title test", "artist": "artistic test"});
+      }
+    };
+
+    document.getElementById("lame").onchange = function () {
+      if (lame.checked)
+        encoder = Webcast.Encoder.Lame;
+    };
+    document.getElementById("shine").onchange = function () {
+      if (shine.checked)
+        encoder = Webcast.Encoder.Shine;
+    };
+    document.getElementById("raw").onchange = function () {
+      if (raw.checked)
+        encoder = Webcast.Encoder.Raw;
+    };
+
+    document.getElementById("stop").onclick = function () {
+      killWebcast();
+    };
+  }
+
+  window.addEventListener("load", init, false);
+</script>
+
+<h2>Webcast Client Test</h2>
+Encoder:
+<input type="radio" name="encoder" value="lame" id="lame" checked>Lame
+<input type="radio" name="encoder" value="shine" id="shine">Shine
+<input type="radio" name="encoder" value="raw" id="raw">Raw<br>
+<button id="record-audio">Record</button>
+<button id="play-audio">Play</button>
+<button id="stop">Stop</button>
+<button id="send-metadata">Send metadata</button>
+<div id="output"></div>
+</html>

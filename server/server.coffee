@@ -35,7 +35,7 @@ wsServer.on "request", (req) ->
         return connection.close()
 
       connection.hello = msg.utf8Data.data
-      console.log "#{new Date} -- Mount point: #{connection.hello.mount}."
+      console.log "#{new Date} -- Mount point: #{req.httpRequest.url}."
       console.log "#{new Date} -- MIME type: #{connection.hello.mime}."
       console.log "#{new Date} -- Audio channels: #{connection.hello.audio.channels}."
       if (connection.hello.mime == "audio/mpeg")

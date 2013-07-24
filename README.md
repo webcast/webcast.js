@@ -13,7 +13,7 @@ The `webcast` protocol aims at streaming binary data and textual metadata throug
 
 A websocket for the `webcast` protocol MUST be initiated by passing the second argument as `"websocket"`:
 ```
-var websocket = new WebSocket(wsUri, "webcast");
+var websocket = new WebSocket("ws://localhost:8080/mount", "webcast");
 ```
 
 In accordance with the [websocket protocol documentation](http://tools.ietf.org/html/rfc6455), an opened
@@ -29,7 +29,7 @@ Text frames MUST contain JSON-encoded data, with the following top-level structu
 { type: "frame-type",
   data: frameData }
 ```
-Where `frameData` is any type of JSON-encoded data.
+Where the `data` field is OPTIONAL and `frameData` can be any type of JSON-encoded data.
 
 Any implementation SHOULD raise an error upon receiving text frames that do not follow this structure. 
 
@@ -43,8 +43,7 @@ The following text frames are currently documented and MUST be accepted by any i
 The first frame sent to a `webcast` websocket MUST be a `hello` frame. Any implementation MUST
 raise an error if the first frame received on a `webcast` websocket is not a `hello` frame.
 
-The type of this frame MUST be `"hello"` and its data MUST be an object that MUST contain a `mime` key and SHOULD
-contain a `mount` key, in accordance with [Icecast](http://www.icecast.org/)'s use of mountpoints.
+The type of this frame MUST be `"hello"` and its data MUST be an object that MUST contain a `mime` key.
 
 The `hello` frame MAY contain other information but the structure of this information is not documented yet.
 
