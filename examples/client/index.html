@@ -16,6 +16,7 @@
   var encoder = Webcast.Encoder.Lame;
   var audioContext;
   var webcastNode;
+  var passThrough = false;
   var audioSource;
 
   function createAudioContext() {
@@ -83,13 +84,18 @@
     console.log("Initializing.");
 
     document.getElementById('play-audio').onclick = function() {
-      createAudioSource(fileUrl, {passThrough: true});
+      createAudioSource(fileUrl, {passThrough: passThrough});
     };
 
     document.getElementById('record-audio').onclick = function () {
       console.log("Clicked record.");
       navigator.getUserMedia({audio:true, video:false}, function (stream) {
-        createAudioSource(URL.createObjectURL(stream), {passThrough: false});
+        killWebcast();
+
+        createAudioContext();
+        var source = audioContext.createMediaStreamSource(stream);
+
+        createWebcastNode(source, {passThrough: passThrough});
       }, function(e) {
         console.log("getUserMedia error: "+e.name+" "+e.message);
       });
@@ -106,15 +112,15 @@
     };
 
     document.getElementById("lame").onchange = function () {
-      if (lame.checked)
+      if (this.checked)
         encoder = Webcast.Encoder.Lame;
     };
     document.getElementById("shine").onchange = function () {
-      if (shine.checked)
+      if (this.checked)
         encoder = Webcast.Encoder.Shine;
     };
     document.getElementById("raw").onchange = function () {
-      if (raw.checked)
+      if (this.checked)
         encoder = Webcast.Encoder.Raw;
     };
 
@@ -124,6 +130,10 @@
 
     document.getElementById("file").onchange = function () {
       fileUrl = URL.createObjectURL(document.getElementById("file").files[0]);
+    };
+
+    document.getElementById("passThrough").onchange = function () {
+      passThrough = this.checked; 
     };
   }
 
@@ -135,6 +145,8 @@ Encoder:
 <input type="radio" name="encoder" value="lame" id="lame" checked>Lame
 <input type="radio" name="encoder" value="shine" id="shine">Shine
 <input type="radio" name="encoder" value="raw" id="raw">Raw<br>
+<br>
+Play stream locally: <input type="checkbox" id="passThrough"></input><br>
 <br>
 Stream from the microphone:<br>
 <button id="record-audio">Record</button><br>
