@@ -95,10 +95,8 @@ The API contains several classes:
 
 The demonstration client, discussed in the next secion, contains a complete example. Here's the highlight of its code:
 
-To stream from a `<audio>` element:
 ```
-var audioElement = ...; // Find or create the <audio> element.
-var source = audioContext.createMediaElementSource(audioElement);
+var source = (...);
 
 var encoder = new Webcast.Encoder.Lame({
   channels: 2,
@@ -110,29 +108,13 @@ var webcast = new Webcast.Node({
   uri: "ws://localhost:8080/mount",
   encoder: encoder,
   context: audioContext,
-  source: source
+  options: options
 });
 
-```
 
-To stream from a Media Stream element:
-```
-navigator.getUserMedia({audio:true, video:false}, function (stream) {
-  var source = audioContext.createMediaStreamSource(stream);
+source.connect(webcast);
+webcastNode.connect(audioContext.destination);
 
-  var encoder = new Webcast.Encoder.Lame({
-    channels: 2,
-    samplerate: 44100,
-    bitrate: 128
-  });
-
-  var webcast = new Webcast.Node({
-    uri: "ws://localhost:8080/mount",
-    encoder: encoder,
-    context: audioContext,
-    source: source
-  });
-});
 ```
 
 How to test?
