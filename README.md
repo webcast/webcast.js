@@ -20,7 +20,7 @@ in browsers, thus providing a readily available browser client to stream local f
 The protocol involves several cutting-edge technologies and, thus, require a fairly modern browser. However, in the
 near future, it will provide a solid basis for browser-side streaming. 
 
-Here's a quick summary of the current technologies required for the protocol and their limitations:
+Here's a quick summary of the technologies required for the protocol and their limitations:
 * [Websocket API](http://www.w3.org/TR/2011/WD-websockets-20110929/): This is the transport layer. It is readily available in most modern browsers.
 * [Web Audio API](https://dvcs.w3.org/hg/audio/raw-file/tip/webaudio/specification.html): This is the API used to manipulate audio and video data inside the browser. It is currently fully implemented in Chrome and only partially in Firefox Nightly.
 * [asm.js](http://asmjs.org/): This is the techonology used to optimize the mp3 encoders. It is currently only supported by Firefox.
