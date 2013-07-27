@@ -9,7 +9,7 @@
 
   // Configuration
   var wsUri = "ws://localhost:8080/mount";
-  var fileUrl = "http://upload.wikimedia.org/wikipedia/en/4/45/ACDC_-_Back_In_Black-sample.ogg";
+  var fileUrl;
   var bitrate = 64;
   var channels = 1;
   var samplerate;
@@ -98,7 +98,10 @@
     document.getElementById('send-metadata').onclick = function () {
       if (webcastNode) {
         console.log("Send metadata.");
-        webcastNode.sendMetadata({"title":"title test", "artist": "artistic test"});
+        webcastNode.sendMetadata({
+          title:  document.getElementById("title").value,
+          artist: document.getElementById("artist").value
+        });
       }
     };
 
@@ -118,6 +121,10 @@
     document.getElementById("stop").onclick = function () {
       killWebcast();
     };
+
+    document.getElementById("file").onchange = function () {
+      fileUrl = URL.createObjectURL(document.getElementById("file").files[0]);
+    };
   }
 
   window.addEventListener("load", init, false);
@@ -128,9 +135,22 @@ Encoder:
 <input type="radio" name="encoder" value="lame" id="lame" checked>Lame
 <input type="radio" name="encoder" value="shine" id="shine">Shine
 <input type="radio" name="encoder" value="raw" id="raw">Raw<br>
-<button id="record-audio">Record</button>
-<button id="play-audio">Play</button>
-<button id="stop">Stop</button>
-<button id="send-metadata">Send metadata</button>
+<br>
+Stream from the microphone:<br>
+<button id="record-audio">Record</button><br>
+<br>
+Choose a file to play:<br>
+<input type="file" id="file" accept="audio/*"></input><br>
+<button id="play-audio">Play</button><br>
+<br>
+Stop Streaming:<br>
+<button id="stop">Stop</button><br>
+<br>
+Send test metadata:<br>
+Artist:
+<input id="artist" type="text"></input><br>
+Title:
+<input id="title" type="text"></input><br>
+<button id="send-metadata">Send</button><br>
 <div id="output"></div>
 </html>
