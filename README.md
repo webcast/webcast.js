@@ -43,7 +43,7 @@ Once started, you can point your browser to [http://localhost:8000/](http://loca
 
 #### Server
 
-The `server/` directory contains a demo server, written in [NodeJS](http://nodejs.org/). In order to run it, you
+The `examples/server/` directory contains a demo server, written in [NodeJS](http://nodejs.org/). In order to run it, you
 will need a functional node install. Once this is done, you can execute `npm install` in the `server/` directory
 and then `cake run` and you should be good to go!
 
