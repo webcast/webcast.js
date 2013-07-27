@@ -113,7 +113,7 @@ var webcast = new Webcast.Node({
 
 
 source.connect(webcast);
-webcastNode.connect(audioContext.destination);
+webcast.connect(audioContext.destination);
 
 ```
 
