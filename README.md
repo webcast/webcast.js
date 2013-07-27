@@ -26,7 +26,8 @@ Here's a quick summary of the technologies required for the protocol and their l
 * [asm.js](http://asmjs.org/): This is the techonology used to optimize the mp3 encoders. It is currently fully supported by Firefox and shows pretty good performances on [Chrome Canary](https://www.google.com/intl/en/chrome/browser/canary.html).
 
 All in all, the protocol is fully usable in [Chrome Canary](https://www.google.com/intl/en/chrome/browser/canary.html) 
-and will be fully usable with Firefox Nightly once they finish implementing the Web Audio API.
+and will be fully usable with [Firefox Nightly](http://nightly.mozilla.org/) once they finish implementing the Web 
+Audio API.
 
 ### How to test?
 
