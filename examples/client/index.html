@@ -65,7 +65,7 @@
     audioSource = new Audio();
 
     audioSource.src = url;
-    audioSource.controls = false;
+    audioSource.controls = true;
     audioSource.autoplay = false;
     audioSource.loop = true;
 
@@ -76,7 +76,7 @@
       audioSource.play();
     }, false);
 
-    document.body.appendChild(audioSource);
+    document.getElementById("player").appendChild(audioSource);
   }
 
   function init() {
@@ -140,8 +140,10 @@ Stream from the microphone:<br>
 <button id="record-audio">Record</button><br>
 <br>
 Choose a file to play:<br>
-<input type="file" id="file" accept="audio/*"></input><br>
-<button id="play-audio">Play</button><br>
+<div id="player">
+  <input type="file" id="file" accept="audio/*"></input><br>
+  <button id="play-audio">Play</button><br>
+</div>
 <br>
 Stop Streaming:<br>
 <button id="stop">Stop</button><br>
