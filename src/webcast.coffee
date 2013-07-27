@@ -77,19 +77,19 @@ class Webcast.Encoder.Shine
     @shine.encode data
 
 class Webcast.Socket
-  constructor: ({@uri, @encoder}) ->
-    @socket = new WebSocket @uri, "webcast"
+  constructor: ({uri, mime, info}) ->
+    @socket = new WebSocket uri, "webcast"
 
-    data =
-      mime: @encoder.mime
+    @hello =
+      mime: mime
 
-    for key, value of @encoder.info
-      data[key] = value
+    for key, value of info
+      @hello[key] = value
 
     @socket.onopen = =>
       @socket.send JSON.stringify(
         type: "hello"
-        data: data
+        data: @hello
       )
 
     this
@@ -113,45 +113,40 @@ class Webcast.Socket
   close: ->
     @socket.close()
 
-class Webcast.Node
-  constructor: ({@uri, @encoder, @context, @source}) ->
+Webcast.Node = ({uri, @encoder, context, options}) ->
     @socket = new Webcast.Socket
-      uri:     @uri
-      encoder: @encoder
+      uri:  uri
+      mime: @encoder.mime
+      info: @encoder.info
 
-    @buflen = 4096
+    @options =
+      passThrough: false
+      bufferSize: 4096
 
-    @node = @context.createScriptProcessor @buflen, @encoder.channels, 2
+    for key, value of options
+      @options[key] = value
 
-    @node.onaudioprocess = (buf) =>
+    node = context.createScriptProcessor @options.bufferSize, @encoder.channels, @encoder.channels
+
+    node.webcast = this
+
+    node.onaudioprocess = (buf) =>
       audio = []
       for channel in [0..@encoder.channels-1]
-        audio[channel] = buf.inputBuffer.getChannelData channel
+        channelData = buf.inputBuffer.getChannelData channel
+        audio[channel] = channelData
+
+        if @options.passThrough
+          # Copy data to output buffer
+          buf.outputBuffer.getChannelData(channel).set channelData
 
       data = @encoder.encode audio
       @socket.sendData data
 
-    @source.connect @node
-    @node.connect @context.destination
+    node.close = =>
+      @socket.close()
 
-    @numberOfInputs        = @node.numberOfInputs
-    @numberOfOutputs       = @node.numberOfOutputs
-    @channelCount          = @node.channelCount
-    @channelCountMode      = @node.channelCountMode
-    @channelInterpretation = @node.channelInterpretation
+    node.sendMetadata = (metadata) =>
+      @socket.sendMetadata metadata
 
-  connect: ->
-    @node.connect.apply @node, arguments
-    @numberOfOutputs = @node.numberOfOutputs
-
-  disconnect: ->
-    @node.disconnect.apply @node, arguments
-    @numberOfOutputs = @node.numberOfOutputs
-
-  close: ->
-    @disconnect()
-    @source.disconnect()
-    @socket.close()
-
-  sendMetadata: (metadata) ->
-    @socket.sendMetadata metadata
+    node

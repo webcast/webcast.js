@@ -9,12 +9,14 @@
 
   // Configuration
   var wsUri = "ws://localhost:8080/mount";
+  var fileUrl = "http://upload.wikimedia.org/wikipedia/en/4/45/ACDC_-_Back_In_Black-sample.ogg";
   var bitrate = 64;
   var channels = 1;
   var samplerate;
   var encoder = Webcast.Encoder.Lame;
   var audioContext;
   var webcastNode;
+  var audioSource;
 
   function createAudioContext() {
     if (typeof webkitAudioContext !== "undefined") {
@@ -26,6 +28,10 @@
   }
 
   function killWebcast() {
+    if (audioSource) {
+      audioSource.remove();
+      audioSource = null;
+    }
     if (webcastNode) {
       webcastNode.close();
       webcastNode = null;
@@ -35,7 +41,7 @@
     }
   }
 
-  function createWebcastNode(source) {
+  function createWebcastNode(source, options) {
     var enc = new encoder({
       channels: channels,
       samplerate: samplerate,
@@ -46,44 +52,44 @@
       uri: wsUri,
       encoder: enc,
       context: audioContext,
-      source: source
+      options: options
     });
+    
+    source.connect(webcastNode);
+    webcastNode.connect(audioContext.destination);
   }
 
-  function createAudioSource(url) {
-    var audio = new Audio();
-    audio.src = url;
-    audio.controls = false;
-    audio.autoplay = false;
-    audio.loop = true;
-    return audio;
-  }
+  function createAudioSource(url, options) {
+    killWebcast();
 
-  var fileUrl = "http://upload.wikimedia.org/wikipedia/en/4/45/ACDC_-_Back_In_Black-sample.ogg";
-  var fileSource = createAudioSource(fileUrl);
+    audioSource = new Audio();
+
+    audioSource.src = url;
+    audioSource.controls = false;
+    audioSource.autoplay = false;
+    audioSource.loop = true;
+
+    audioSource.addEventListener("canplay", function () {
+      createAudioContext();
+      var source = audioContext.createMediaElementSource(audioSource);
+      createWebcastNode(source, options);
+      audioSource.play();
+    }, false);
+
+    document.body.appendChild(audioSource);
+  }
 
   function init() {
     console.log("Initializing.");
 
     document.getElementById('play-audio').onclick = function() {
-      killWebcast();
-
-      createAudioContext();
-      var source = audioContext.createMediaElementSource(fileSource)
-      createWebcastNode(source);
-
-      fileSource.play();
+      createAudioSource(fileUrl, {passThrough: true});
     };
 
     document.getElementById('record-audio').onclick = function () {
       console.log("Clicked record.");
       navigator.getUserMedia({audio:true, video:false}, function (stream) {
-        killWebcast();
-
-        createAudioContext();
-        var source = audioContext.createMediaStreamSource(stream);
-
-        createWebcastNode(source);
+        createAudioSource(URL.createObjectURL(stream), {passThrough: false});
       }, function(e) {
         console.log("getUserMedia error: "+e.name+" "+e.message);
       });
