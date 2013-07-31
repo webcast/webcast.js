@@ -63,6 +63,7 @@ at `src/webcast.coffee`. If you do not like caffeine, you can also use the compi
 The API contains several classes:
 
 * `Webcast.Encoder.{Raw, Lame, Shine}`: the set of currently available encoders
+* `Webcast.Encoder.Worker`: a wrapper to encode in a [Web Worker](http://www.w3.org/TR/workers/)
 * `Webcast.Socket`: A simple wrapper around `Websockets` that implements the `webcast` protocol.
 * `Webcast.Node`: A wrapper to create a `webcast` node, in-par with the Web Audio API.
 
