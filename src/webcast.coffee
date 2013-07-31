@@ -131,8 +131,7 @@ class Webcast.Encoder.Worker
              """
 
     blob = new Blob [script], type: "text/javascript"
-    window.goo = blob
-    @worker = new origWorker webkitURL.createObjectURL(blob)
+    @worker = new origWorker URL.createObjectURL(blob)
 
     @worker.onmessage = ({data}) =>
       @pending.push data

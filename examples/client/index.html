@@ -3,21 +3,23 @@
 <title>Webcase client Test</title>
 <script src="libshine.js"></script>
 <script src="libmp3lame.js"></script>
+<script src="libmad.js"></script>
 <script src="webcast.js"></script>
 <script language="javascript" type="text/javascript">
   navigator.getUserMedia  = navigator.getUserMedia || navigator.webkitGetUserMedia || navigator.mozGetUserMedia || navigator.msGetUserMedia;
 
   // Configuration
   var wsUri = "ws://localhost:8080/mount";
-  var fileUrl;
-  var bitrate = 64;
-  var channels = 1;
+  var file;
+  var bitrate = 128;
+  var channels = 2;
   var samplerate;
   var encoder = Webcast.Encoder.Lame;
   var audioContext;
-  var webcastNode;
+  var webcast;
   var passThrough = false;
   var useWorker = false;
+  var useMad = false;
   var audioSource;
 
   function createAudioContext() {
@@ -34,16 +36,16 @@
       audioSource.remove();
       audioSource = null;
     }
-    if (webcastNode) {
-      webcastNode.close();
-      webcastNode = null;
+    if (webcast) {
+      webcast.close();
+      webcast = null;
     }
     if (audioContext) {
       audioContext = null;
     }
   }
 
-  function createWebcastNode(source) {
+  function createEncoder() {
     var enc = new encoder({
       channels: channels,
       samplerate: samplerate,
@@ -57,29 +59,74 @@
       });
     }
 
-    webcastNode = new Webcast.Node({
+    return enc;
+  }
+
+  function createWebcastNode(source) {
+    webcast = new Webcast.Node({
       uri: wsUri,
-      encoder: enc,
+      encoder: createEncoder(),
       context: audioContext,
       options: {passThrough: passThrough}
     });
     
-    source.connect(webcastNode);
-    webcastNode.connect(audioContext.destination);
+    source.connect(webcast);
+    webcast.connect(audioContext.destination);
   }
 
-  function createAudioSource(url) {
+  function createAudioSource() {
     killWebcast();
+    createAudioContext();
+
+    if (useMad) {
+      var enc = createEncoder();
+      var socket = webcast = new Webcast.Socket({
+        uri: wsUri,
+        mime: enc.mime,
+        info: enc.info
+      }); 
+      var create = function () {
+        createMadDecoder(file, function (decoder) {
+          var fn = function (data, err) {
+            var start = new Date;
+            if (!socket.isOpen()) {
+              return;
+            }
+            if (err) {
+              create();
+              return;
+            }
+            data = data.slice(0,channels);
+            enc.encode(data, function (encoded) {
+              if (webcast) {
+                webcast.sendData(encoded);
+              }
+              var stop = new Date;
+              var frameDuration = 1000*parseFloat(data[0].length)/samplerate;
+              var timeout = Math.max(frameDuration - stop.getTime() + start.getTime(), 0);
+              // We wait for that frame to expire.
+              setTimeout(function () {
+                decoder.decodeFrame(fn);
+              }, timeout);
+            });
+          };
+          decoder.decodeFrame(fn);
+        });
+      };
+      socket.socket.addEventListener("open", function() {
+        create();
+      });
+      return;
+    }
 
     audioSource = new Audio();
 
-    audioSource.src = url;
+    audioSource.src = URL.createObjectURL(file);
     audioSource.controls = true;
     audioSource.autoplay = false;
     audioSource.loop = true;
 
     audioSource.addEventListener("canplay", function () {
-      createAudioContext();
       var source = audioContext.createMediaElementSource(audioSource);
       createWebcastNode(source);
       audioSource.play();
@@ -92,7 +139,7 @@
     console.log("Initializing.");
 
     document.getElementById('play-audio').onclick = function() {
-      createAudioSource(fileUrl);
+      createAudioSource();
     };
 
     document.getElementById('record-audio').onclick = function () {
@@ -110,9 +157,9 @@
     };
 
     document.getElementById('send-metadata').onclick = function () {
-      if (webcastNode) {
+      if (webcast) {
         console.log("Send metadata.");
-        webcastNode.sendMetadata({
+        webcast.sendMetadata({
           title:  document.getElementById("title").value,
           artist: document.getElementById("artist").value
         });
@@ -137,7 +184,11 @@
     };
 
     document.getElementById("file").onchange = function () {
-      fileUrl = URL.createObjectURL(document.getElementById("file").files[0]);
+      file = this.files[0];
+    };
+
+    document.getElementById("asynchronous").onchange = function () {
+      useWorker = this.checked;
     };
 
     document.getElementById("asynchronous").onchange = function () {
@@ -146,6 +197,15 @@
 
     document.getElementById("passThrough").onchange = function () {
       passThrough = this.checked; 
+    };
+
+    document.getElementById("mad").onchange = function () {
+      useMad = this.checked;
+      if (useMad) {
+        document.getElementById("file").accept = "audio/mpeg";
+      } else {
+        document.getElementById("file").accept = "audio/*";
+      }
     };
   }
 
@@ -160,6 +220,7 @@ Encoder:
 <br>
 Play stream locally: <input type="checkbox" id="passThrough"></input><br>
 Use asynchronous worker: <input type="checkbox" id="asynchronous"></input><br>
+Decode using libmad.js: <input type="checkbox" id="mad"></input><br>
 <br>
 Stream from the microphone:<br>
 <button id="record-audio">Record</button><br>
@@ -173,7 +234,7 @@ Choose a file to play:<br>
 Stop Streaming:<br>
 <button id="stop">Stop</button><br>
 <br>
-Send test metadata:<br>
+Send metadata:<br>
 Artist:
 <input id="artist" type="text"></input><br>
 Title:

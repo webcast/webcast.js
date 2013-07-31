@@ -3136,7 +3136,7 @@ function convertFloat32(buf) {
   for (chan=0;chan<buf.length;chan++) {
     ret[chan] = new Int16Array(samples);
     for (i=0;i<samples;i++)
-      ret[chan][i] = buf[chan][i] * 32767;
+      ret[chan][i] = parseInt(buf[chan][i] * 32767);
   }
   return ret;
 }
@@ -3145,11 +3145,13 @@ Shine.prototype.encode = function (data) {
     throw "Invalid data";
   var encoded = new Uint8Array;  
   var tmp = new Array(this._channels);
-  if (data[0] instanceof Float32Array)
+  if (data[0] instanceof Float32Array) {
     data = convertFloat32(data);
+  }
   var chan;
-  for (chan=0;chan<this._channels; chan++)
-    this._rem[chan] = concat(Int32Array, this._rem[chan], data[chan]);
+  for (chan=0;chan<this._channels; chan++) {
+    this._rem[chan] = concat(Int16Array, this._rem[chan], data[chan]);
+  }
   var i, enc;
   for (i=0;i<this._rem[0].length;i+=this._samples_per_pass) {
     for (chan=0; chan<this._channels; chan++)
@@ -3165,7 +3167,7 @@ Shine.prototype.encode = function (data) {
     this._rem = tmp;
   else
     for (chan=0; chan<this._channels; chan++)
-      this._rem[chan] = new Int32Array;
+      this._rem[chan] = new Int16Array;
   return encoded;
 };
 Shine.prototype.close = function () {
