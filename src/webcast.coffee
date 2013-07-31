@@ -1,4 +1,4 @@
-window.Webcast =
+Webcast =
   Encoder: {}
 
 class Webcast.Encoder.Raw
@@ -10,7 +10,14 @@ class Webcast.Encoder.Raw
         samplerate: @samplerate
         encoder: "RAW u8 encoder"
 
-  encode: (data) ->
+  toString: -> """
+    new Webcast.Encoder.Raw({
+      channels: #{@channels}, 
+      samplerate: #{@samplerate}
+    })
+               """
+
+  encode: (data, fn) ->
     channels = data.length
     samples  = data[0].length
     buf = new Int8Array channels*samples
@@ -18,7 +25,7 @@ class Webcast.Encoder.Raw
       for i in [0..samples-1]
         buf[channels*i + chan] = data[chan][i]*127
 
-    buf
+    fn buf
 
 origLame = Lame
 
@@ -47,12 +54,20 @@ class Webcast.Encoder.Lame
 
     this
 
-  encode: (data) ->
+  toString: -> """
+    new Webcast.Encoder.Lame({
+      bitrate: #{@bitrate},
+      channels: #{@channels},
+      samplerate: #{@samplerate}
+    })
+               """
+
+  encode: (data, fn) ->
     chan_l = data[0]
     chan_r = data[1] || data[0]
-    origLame.encode_buffer_ieee_float(@lame, chan_l, chan_r).data
+    fn origLame.encode_buffer_ieee_float(@lame, chan_l, chan_r).data
 
-origShine = Shine
+  origShine = Shine
 
 class Webcast.Encoder.Shine
   mime: "audio/mpeg"
@@ -73,8 +88,61 @@ class Webcast.Encoder.Shine
 
     this
 
-  encode: (data) ->
-    @shine.encode data
+  toString: -> """
+    new Webcast.Encoder.Shine({
+      bitrate: #{@bitrate},
+      channels: #{@channels},
+      samplerate: #{@samplerate}
+    })
+               """
+
+  encode: (data, fn) ->
+    fn @shine.encode(data)
+
+# This will only work in the browser!
+if typeof Worker != "undefined"
+  origWorker = Worker
+
+class Webcast.Encoder.Worker
+  constructor: ({@encoder, @scripts}) ->
+    @mime     = @encoder.mime
+    @info     = @encoder.info
+    @channels = @encoder.channels
+    @pending  = []
+
+    imported = []
+    for script in @scripts
+      imported.push "'#{script}'"
+
+    script = """
+      var window;
+      importScripts(#{imported.join()});
+      var encoder = #{@encoder.toString()};
+      self.onmessage = function (e) {
+        var type = e.data.type;
+        var data = e.data.data;
+        if (type === "buffer") {
+          encoder.encode(data, function (encoded) {
+            postMessage(encoded);
+          });
+          return;
+        }
+      };
+             """
+
+    blob = new Blob [script], type: "text/javascript"
+    window.goo = blob
+    @worker = new origWorker webkitURL.createObjectURL(blob)
+
+    @worker.onmessage = ({data}) =>
+      @pending.push data
+
+  encode: (buffer, fn) ->
+    @worker?.postMessage
+      type: "buffer"
+      data: buffer
+
+    fn @pending.shift()
 
 class Webcast.Socket
   constructor: ({uri, mime, info}) ->
@@ -97,6 +165,8 @@ class Webcast.Socket
   # This method takes ArrayBuffer or any TypedArray
 
   sendData: (data) ->
+    return unless @isOpen()
+
     return unless data.length > 0
 
     unless data instanceof ArrayBuffer
@@ -105,15 +175,20 @@ class Webcast.Socket
     @socket.send data
 
   sendMetadata: (metadata) ->
+    return unless @isOpen()
+
     @socket.send JSON.stringify(
       type: "metadata"
       data: metadata
     )
 
+  isOpen: ->
+    @socket.readyState == WebSocket.OPEN
+
   close: ->
     @socket.close()
 
-Webcast.Node = ({uri, @encoder, context, options}) ->
+  Webcast.Node = ({uri, @encoder, context, options}) ->
     @socket = new Webcast.Socket
       uri:  uri
       mime: @encoder.mime
@@ -140,8 +215,8 @@ Webcast.Node = ({uri, @encoder, context, options}) ->
           # Copy data to output buffer
           buf.outputBuffer.getChannelData(channel).set channelData
 
-      data = @encoder.encode audio
-      @socket.sendData data
+      @encoder.encode audio, (data) =>
+        @socket.sendData(data) if data?
 
     node.close = =>
       @socket.close()
@@ -150,3 +225,9 @@ Webcast.Node = ({uri, @encoder, context, options}) ->
       @socket.sendMetadata metadata
 
     node
+
+if typeof window != "undefined"
+  window.Webcast = Webcast
+
+if typeof self != "undefined"
+  self.Webcast = Webcast

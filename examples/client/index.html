@@ -17,6 +17,7 @@
   var audioContext;
   var webcastNode;
   var passThrough = false;
+  var useWorker = false;
   var audioSource;
 
   function createAudioContext() {
@@ -42,25 +43,32 @@
     }
   }
 
-  function createWebcastNode(source, options) {
+  function createWebcastNode(source) {
     var enc = new encoder({
       channels: channels,
       samplerate: samplerate,
       bitrate: bitrate
     });
 
+    if (useWorker) {
+      enc = new Webcast.Encoder.Worker({
+        scripts: ["http://localhost:8000/libmp3lame.js", "http://localhost:8000/libshine.js", "http://localhost:8000/webcast.js"],
+        encoder: enc
+      });
+    }
+
     webcastNode = new Webcast.Node({
       uri: wsUri,
       encoder: enc,
       context: audioContext,
-      options: options
+      options: {passThrough: passThrough}
     });
     
     source.connect(webcastNode);
     webcastNode.connect(audioContext.destination);
   }
 
-  function createAudioSource(url, options) {
+  function createAudioSource(url) {
     killWebcast();
 
     audioSource = new Audio();
@@ -73,7 +81,7 @@
     audioSource.addEventListener("canplay", function () {
       createAudioContext();
       var source = audioContext.createMediaElementSource(audioSource);
-      createWebcastNode(source, options);
+      createWebcastNode(source);
       audioSource.play();
     }, false);
 
@@ -84,7 +92,7 @@
     console.log("Initializing.");
 
     document.getElementById('play-audio').onclick = function() {
-      createAudioSource(fileUrl, {passThrough: passThrough});
+      createAudioSource(fileUrl);
     };
 
     document.getElementById('record-audio').onclick = function () {
@@ -95,7 +103,7 @@
         createAudioContext();
         var source = audioContext.createMediaStreamSource(stream);
 
-        createWebcastNode(source, {passThrough: passThrough});
+        createWebcastNode(source);
       }, function(e) {
         console.log("getUserMedia error: "+e.name+" "+e.message);
       });
@@ -132,6 +140,10 @@
       fileUrl = URL.createObjectURL(document.getElementById("file").files[0]);
     };
 
+    document.getElementById("asynchronous").onchange = function () {
+      useWorker = this.checked;
+    };
+
     document.getElementById("passThrough").onchange = function () {
       passThrough = this.checked; 
     };
@@ -147,6 +159,7 @@ Encoder:
 <input type="radio" name="encoder" value="raw" id="raw">Raw<br>
 <br>
 Play stream locally: <input type="checkbox" id="passThrough"></input><br>
+Use asynchronous worker: <input type="checkbox" id="asynchronous"></input><br>
 <br>
 Stream from the microphone:<br>
 <button id="record-audio">Record</button><br>
