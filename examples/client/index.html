@@ -46,6 +46,9 @@
   }
 
   function createEncoder() {
+    bitrate = parseInt(document.getElementById("bitrate").value); 
+    channels = parseInt(document.getElementById("channels").value);
+
     var enc = new encoder({
       channels: channels,
       samplerate: samplerate,
@@ -214,20 +217,24 @@
 
 <h2>Webcast Client Test</h2>
 Encoder:
-<input type="radio" name="encoder" value="lame" id="lame" checked>Lame
+<input type="radio" name="encoder" value="lame"  id="lame" checked>Lame
 <input type="radio" name="encoder" value="shine" id="shine">Shine
-<input type="radio" name="encoder" value="raw" id="raw">Raw<br>
+<input type="radio" name="encoder" value="raw"   id="raw">Raw<br>
 <br>
-Play stream locally: <input type="checkbox" id="passThrough"></input><br>
-Use asynchronous worker: <input type="checkbox" id="asynchronous"></input><br>
-Decode using libmad.js: <input type="checkbox" id="mad"></input><br>
+Encoding setup:<br>
+Channels: <input type="text"  value="2"     id="channels">(max: 2)</br>
+Bitrate:  <input type="text"  value="128"   id="bitrate"></br>
+<br>
+Play stream locally: <input type="checkbox" id="passThrough"><br>
+Use asynchronous worker: <input type="checkbox" id="asynchronous"><br>
+Decode using libmad.js: <input type="checkbox" id="mad"><br>
 <br>
 Stream from the microphone:<br>
 <button id="record-audio">Record</button><br>
 <br>
 Choose a file to play:<br>
 <div id="player">
-  <input type="file" id="file" accept="audio/*"></input><br>
+  <input type="file" id="file" accept="audio/*"><br>
   <button id="play-audio">Play</button><br>
 </div>
 <br>
@@ -236,9 +243,9 @@ Stop Streaming:<br>
 <br>
 Send metadata:<br>
 Artist:
-<input id="artist" type="text"></input><br>
+<input id="artist" type="text"><br>
 Title:
-<input id="title" type="text"></input><br>
+<input id="title" type="text"><br>
 <button id="send-metadata">Send</button><br>
 <div id="output"></div>
 </html>
