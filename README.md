@@ -32,8 +32,8 @@ and in Chrome once they fully support `asm.js`.
 
 #### Client
 
-The `examples/client/` directory of this repository contains a client examples, sending mp3 encoded data, using 
-[libshine.js](https://github.com/savonet/shine/tree/master/js) and also sending raw PCM data. 
+The `examples/client/` directory of this repository contains a client example, sending mp3 encoded data, using 
+[libshine.js](https://github.com/savonet/shine/tree/master/js) or raw PCM data.
 
 You can start the client by executing `make` in the repository. You will need a functional `python` binary 
 with the `SimpleHTTPServer` module.
