@@ -74,7 +74,7 @@ Here's the highlight of its code:
 ```
 var source = (...);
 
-var encoder = new Webcast.Encoder.Lame({
+var encoder = new Webcast.Encoder.Mp3({
   channels: 2,
   samplerate: 44100,
   bitrate: 128
