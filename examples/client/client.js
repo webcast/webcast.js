@@ -61,6 +61,7 @@ function createEncoder(inputSamplerate) {
   if (inputSamplerate !== samplerate) {
     enc = new Webcast.Encoder.Resample({
       encoder: enc,
+      type: Samplerate.LINEAR,
       samplerate: inputSamplerate
     });
   }
