@@ -149,87 +149,89 @@ class Webcast.Encoder.Asynchronous
 
     fn @pending.shift()
 
-class Webcast.Socket
-  constructor: ({uri, mime, info}) ->
-    @socket = new WebSocket uri, "webcast"
+Webcast.Socket = ({url, mime, info}) ->
+  socket = new WebSocket url, "webcast"
 
-    @hello =
-      mime: mime
+  socket.mime = mime
+  socket.info = info
 
-    for key, value of info
-      @hello[key] = value
+  hello =
+    mime: mime
 
-    @socket.onopen = =>
-      @socket.send JSON.stringify(
-        type: "hello"
-        data: @hello
-      )
+  for key, value of info
+    hello[key] = value
 
-    this
+  send = socket.send
+  socket.send = null
+
+  socket.addEventListener "open", ->
+    send.call socket, JSON.stringify(
+      type: "hello"
+      data: hello
+    )
 
   # This method takes ArrayBuffer or any TypedArray
 
-  sendData: (data) ->
-    return unless @isOpen()
+  socket.sendData = (data) ->
+    return unless socket.isOpen()
 
     return unless data and data.length > 0
 
     unless data instanceof ArrayBuffer
       data = data.buffer.slice data.byteOffset, data.length*data.BYTES_PER_ELEMENT
 
-    @socket.send data
+    send.call socket, data
 
-  sendMetadata: (metadata) ->
-    return unless @isOpen()
+  socket.sendMetadata = (metadata) ->
+    return unless socket.isOpen()
 
-    @socket.send JSON.stringify(
+    send.call socket, JSON.stringify(
       type: "metadata"
       data: metadata
     )
 
-  isOpen: ->
-    @socket.readyState == WebSocket.OPEN
+  socket.isOpen = ->
+    socket.readyState == WebSocket.OPEN
 
-  close: ->
+  socket
+
+Webcast.Node = ({url, @encoder, context, options}) ->
+  @socket = new Webcast.Socket
+    url:  url
+    mime: @encoder.mime
+    info: @encoder.info
+
+  @options =
+    passThrough: false
+    bufferSize: 4096
+
+  for key, value of options
+    @options[key] = value
+
+  node = context.createScriptProcessor @options.bufferSize, @encoder.channels, @encoder.channels
+
+  node.webcast = this
+
+  node.onaudioprocess = (buf) =>
+    audio = []
+    for channel in [0..@encoder.channels-1]
+      channelData = buf.inputBuffer.getChannelData channel
+      audio[channel] = channelData
+
+      if @options.passThrough
+        # Copy data to output buffer
+        buf.outputBuffer.getChannelData(channel).set channelData
+
+    @encoder.encode audio, (data) =>
+      @socket.sendData(data) if data?
+
+  node.close = =>
     @socket.close()
 
-  Webcast.Node = ({uri, @encoder, context, options}) ->
-    @socket = new Webcast.Socket
-      uri:  uri
-      mime: @encoder.mime
-      info: @encoder.info
+  node.sendMetadata = (metadata) =>
+    @socket.sendMetadata metadata
 
-    @options =
-      passThrough: false
-      bufferSize: 4096
-
-    for key, value of options
-      @options[key] = value
-
-    node = context.createScriptProcessor @options.bufferSize, @encoder.channels, @encoder.channels
-
-    node.webcast = this
-
-    node.onaudioprocess = (buf) =>
-      audio = []
-      for channel in [0..@encoder.channels-1]
-        channelData = buf.inputBuffer.getChannelData channel
-        audio[channel] = channelData
-
-        if @options.passThrough
-          # Copy data to output buffer
-          buf.outputBuffer.getChannelData(channel).set channelData
-
-      @encoder.encode audio, (data) =>
-        @socket.sendData(data) if data?
-
-    node.close = =>
-      @socket.close()
-
-    node.sendMetadata = (metadata) =>
-      @socket.sendMetadata metadata
-
-    node
+  node
 
 if typeof window != "undefined"
   window.Webcast = Webcast

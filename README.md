@@ -21,7 +21,7 @@ The protocol involves several cutting-edge technologies and, thus, require a fai
 near future, it will provide a solid basis for browser-side streaming. 
 
 Here's a quick summary of the technologies required for the protocol and their limitations:
-* [Websocket API](http://www.w3.org/TR/2011/WD-websockets-20110929/): This is the transport layer. It is readily available in most modern browsers.
+* [WebSocket API](http://www.w3.org/TR/2011/WD-websockets-20110929/): This is the transport layer. It is readily available in most modern browsers.
 * [Web Audio API](https://dvcs.w3.org/hg/audio/raw-file/tip/webaudio/specification.html): This is the API used to manipulate audio and video data inside the browser. It is currently fully implemented in Chrome and only partially in Firefox Nightly.
 * [asm.js](http://asmjs.org/): This is the techonology used to optimize the mp3 encoder. It is currently only supported by Firefox.
 
@@ -65,7 +65,7 @@ The API contains several classes:
 * `Webcast.Encoder.Mp3`: encoder returning mp3 data. Requires [libshine.js](https://github.com/savonet/shine/tree/master/js).
 * `Webcast.Encoder.Resample`: a wrapper to resample encoder's input. Requires [libsamplerate.js](https://github.com/savonet/libsamplerate-js).
 * `Webcast.Encoder.Asynchronous`: a wrapper to encode in a [Web Worker](http://www.w3.org/TR/workers/)
-* `Webcast.Socket`: a simple wrapper around `Websockets` that implements the `webcast` protocol.
+* `Webcast.Socket`: a simple wrapper around `WebSockets` that implements the `webcast` protocol.
 * `Webcast.Node`: a wrapper to create a `webcast` node, in-par with the Web Audio API.
 
 The demonstration client, discussed in the previous secion, contains a complete example use of this API.
@@ -96,7 +96,7 @@ if (useWorker) {
 }
 
 var webcast = new Webcast.Node({
-  uri:     "ws://localhost:8080/mount",
+  url: "ws://localhost:8080/mount",
   encoder: encoder,
   context: audioContext,
   options: options

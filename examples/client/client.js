@@ -78,7 +78,7 @@ function createEncoder(inputSamplerate) {
 
 function createWebcastNode(source) {
   webcast = new Webcast.Node({
-    uri: wsUri,
+    url: wsUri,
     encoder: createEncoder(audioContext.sampleRate),
     context: audioContext,
     options: {passThrough: passThrough}
@@ -92,8 +92,8 @@ function createMadSource() {
   killWebcast();
 
   var enc = createEncoder();
-  webcast = new Webcast.Socket({
-    uri: wsUri,
+  var socket = webcast = new Webcast.Socket({
+    url: wsUri,
     mime: enc.mime,
     info: enc.info
   });
@@ -103,7 +103,9 @@ function createMadSource() {
   var create = function () {
     createMadDecoder(file, function (decoder) {
       var fn = function (data, err) {
-        if (!webcast || !webcast.isOpen()) {
+        if (!socket.isOpen()) {
+          clearInterval(handler);
+          format = handler = null;
           return;
         }
         if (err) {
@@ -115,8 +117,8 @@ function createMadSource() {
 
         data = data.slice(0,channels);
         enc.encode(data, function (encoded) {
-          if (webcast) {
-            webcast.sendData(encoded);
+          if (socket) {
+            socket.sendData(encoded);
           }
 
           // Let's pretend format does not change accross mp3 frame,
@@ -138,7 +140,7 @@ function createMadSource() {
       decoder.decodeFrame(fn);
     });
   };
-  webcast.socket.addEventListener("open", function() {
+  socket.addEventListener("open", function() {
     create();
   });
 }
