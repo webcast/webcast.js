@@ -80,8 +80,23 @@ var encoder = new Webcast.Encoder.Mp3({
   bitrate: 128
 });
 
+if (inputSampleRate !== 44100) {
+  encoder = new Webcast.Encoder.Resample({
+    encoder:    encoder,
+    samplerate: inputSampleRate 
+  });
+}
+
+if (useWorker) {
+  encoder = new Webcast.Encoder.Asynchronous({
+    encoder: encoder,
+    scripts: [(...], // full path to required scripts for the worker.
+                     // usually includes requires encoders and webcast.js 
+  });
+}
+
 var webcast = new Webcast.Node({
-  uri: "ws://localhost:8080/mount",
+  uri:     "ws://localhost:8080/mount",
   encoder: encoder,
   context: audioContext,
   options: options
@@ -89,6 +104,11 @@ var webcast = new Webcast.Node({
 
 source.connect(webcast);
 webcast.connect(audioContext.destination);
+
+webcast.sendMetadata({
+  title:  "My Awesome Stream",
+  artist: "The Dude"
+});
 
 ```
 
