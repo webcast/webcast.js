@@ -91,7 +91,7 @@ function createMadSource() {
   killWebcast();
 
   var enc = createEncoder();
-  var webcast = new Webcast.Socket({
+  webcast = new Webcast.Socket({
     uri: wsUri,
     mime: enc.mime,
     info: enc.info
