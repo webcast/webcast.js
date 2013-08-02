@@ -58,10 +58,11 @@ class Webcast.Encoder.Mp3
     fn @shine.encode(data)
 
 class Webcast.Encoder.Resample
-  constructor: ({@encoder, @ratio, @type}) ->
+  constructor: ({@encoder, @samplerate, @type}) ->
     @mime       = @encoder.mime
     @info       = @encoder.info
     @channels   = @encoder.channels
+    @ratio      = parseFloat(@encoder.samplerate) / parseFloat(@samplerate)
     @type       = @type || Samplerate.FASTEST
     @resamplers = []
     @remaining  = []
@@ -75,7 +76,7 @@ class Webcast.Encoder.Resample
   toString: -> """
     (new Webcast.Encoder.Resample({
       encoder: #{@encoder.toString()},
-      ratio: #{@ratio},
+      samplerate: #{@samplerate},
       type: #{@type}
      }))
                """

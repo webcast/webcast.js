@@ -61,7 +61,7 @@ function createEncoder(inputSamplerate) {
   if (inputSamplerate !== samplerate) {
     enc = new Webcast.Encoder.Resample({
       encoder: enc,
-      ratio: parseFloat(samplerate) / parseFloat(inputSamplerate)
+      samplerate: inputSamplerate
     });
   }
 
@@ -102,7 +102,7 @@ function createMadSource() {
   var create = function () {
     createMadDecoder(file, function (decoder) {
       var fn = function (data, err) {
-        if (!webcast.isOpen()) {
+        if (!webcast || !webcast.isOpen()) {
           return;
         }
         if (err) {
