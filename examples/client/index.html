@@ -20,6 +20,8 @@
   var passThrough = false;
   var useAsynchronous = false;
   var useMad = false;
+  var useSamplerate = false;
+  var samplerateRatio = 1;
   var audioSource;
 
   function createAudioContext() {
@@ -54,6 +56,13 @@
       samplerate: samplerate,
       bitrate: bitrate
     });
+
+    if (useSamplerate) {
+      enc = new Webcast.Encoder.Resample({
+        encoder: enc,
+        ratio: samplerateRatio
+      });
+    }
 
     if (useAsynchronous) {
       enc = new Webcast.Encoder.Asynchronous({
@@ -114,11 +123,11 @@
               // Screw you crazy specs and encoders.
               if (!handler) {
                 format = decoder.getCurrentFormat();
+                useSamplerate = false;
                 if (format.sampleRate !== samplerate) {
-                  enc = new Webcast.Encoder.Resample({
-                    encoder: createEncoder(),
-                    ratio: samplerate / format.sampleRate
-                  });
+                  useSamplerate = true;
+                  samplerateRatio = samplerate / format.sampleRate;
+                  enc = createEncoder();
                 }
                 var frameDuration = 1000*parseFloat(data[0].length)/format.sampleRate;
 
