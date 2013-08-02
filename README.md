@@ -64,7 +64,7 @@ The API contains several classes:
 * `Webcast.Encoder.Raw`: encoder returning raw s8 samples.
 * `Webcast.Encoder.Mp3`: encoder returning mp3 data. Requires [libshine.js](https://github.com/savonet/shine/tree/master/js).
 * `Webcast.Encoder.Resampler`: a wrapper to resample encoder's input. Requires [libsamplerate.js](https://github.com/savonet/libsamplerate-js).
-* `Webcast.Encoder.Worker`: a wrapper to encode in a [Web Worker](http://www.w3.org/TR/workers/)
+* `Webcast.Encoder.Asynchronous`: a wrapper to encode in a [Web Worker](http://www.w3.org/TR/workers/)
 * `Webcast.Socket`: a simple wrapper around `Websockets` that implements the `webcast` protocol.
 * `Webcast.Node`: a wrapper to create a `webcast` node, in-par with the Web Audio API.
 

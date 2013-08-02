@@ -101,24 +101,20 @@ class Webcast.Encoder.Resample
 
     @encoder.encode buffer, fn
 
-# This will only work in the browser!
-if typeof Worker != "undefined"
-  origWorker = Worker
-
-class Webcast.Encoder.Worker
-  constructor: ({@encoder, @scripts}) ->
+class Webcast.Encoder.Asynchronous
+  constructor: ({@encoder, scripts}) ->
     @mime     = @encoder.mime
     @info     = @encoder.info
     @channels = @encoder.channels
     @pending  = []
 
-    imported = []
-    for script in @scripts
-      imported.push "'#{script}'"
+    @scripts = []
+    for script in scripts
+      @scripts.push "'#{script}'"
 
     script = """
       var window;
-      importScripts(#{imported.join()});
+      importScripts(#{@scripts.join()});
       var encoder = #{@encoder.toString()};
       self.onmessage = function (e) {
         var type = e.data.type;
@@ -133,10 +129,17 @@ class Webcast.Encoder.Worker
              """
 
     blob = new Blob [script], type: "text/javascript"
-    @worker = new origWorker URL.createObjectURL(blob)
+    @worker = new Worker URL.createObjectURL(blob)
 
     @worker.onmessage = ({data}) =>
       @pending.push data
+
+  toString: -> """
+    (new Webcast.Encoder.Asynchronous({
+      encoder: #{@encoder.toString()},
+      scripts: [#{@scripts.join()}]
+    }))
+               """
 
   encode: (buffer, fn) ->
     @worker?.postMessage
@@ -168,7 +171,7 @@ class Webcast.Socket
   sendData: (data) ->
     return unless @isOpen()
 
-    return unless data.length > 0
+    return unless data and data.length > 0
 
     unless data instanceof ArrayBuffer
       data = data.buffer.slice data.byteOffset, data.length*data.BYTES_PER_ELEMENT

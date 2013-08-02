@@ -18,7 +18,7 @@
   var audioContext;
   var webcast;
   var passThrough = false;
-  var useWorker = false;
+  var useAsynchronous = false;
   var useMad = false;
   var audioSource;
 
@@ -55,8 +55,8 @@
       bitrate: bitrate
     });
 
-    if (useWorker) {
-      enc = new Webcast.Encoder.Worker({
+    if (useAsynchronous) {
+      enc = new Webcast.Encoder.Asynchronous({
         scripts: ["http://localhost:8000/libsamplerate.js", "http://localhost:8000/libshine.js", "http://localhost:8000/webcast.js"],
         encoder: enc
       });
@@ -199,7 +199,7 @@
     };
 
     document.getElementById("asynchronous").onchange = function () {
-      useWorker = this.checked;
+      useAsynchronous = this.checked;
     };
 
     document.getElementById("passThrough").onchange = function () {
