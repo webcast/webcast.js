@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <meta charset="utf-8"/>
 <title>Webcase client Test</title>
+<script src="jquery.js"></script>
 <script src="libshine.js"></script>
 <script src="libmad.js"></script>
 <script src="libsamplerate.js"></script>
@@ -12,6 +13,9 @@
   var wsUri = "ws://localhost:8080/mount";
   var file;
   var bitrate = 128;
+  var bitrates = [ 8, 16, 24, 32, 40, 48, 56, 64, 80, 96, 112, 128, 144, 160, 192, 224, 256, 320 ];
+  var samplerate = 44100;
+  var samplerates = [ 8000, 11025, 12000, 16000, 22050, 24000, 32000, 44100, 48000 ];
   var channels = 2;
   var samplerate;
   var encoder = Webcast.Encoder.Mp3;
@@ -20,8 +24,6 @@
   var passThrough = false;
   var useAsynchronous = false;
   var useMad = false;
-  var useSamplerate = false;
-  var samplerateRatio = 1;
   var audioSource;
 
   function createAudioContext() {
@@ -47,9 +49,15 @@
     }
   }
 
-  function createEncoder() {
-    bitrate = parseInt(document.getElementById("bitrate").value); 
-    channels = parseInt(document.getElementById("channels").value);
+  function createEncoder(inputSamplerate) {
+    samplerate = parseInt($("#samplerate").val());
+    bitrate = parseInt($("#bitrate").val());
+    
+    if ($("#stereo").is(":checked")) {
+      channels = 2;
+    } else {
+      channels = 1;
+    }
 
     var enc = new encoder({
       channels: channels,
@@ -57,10 +65,10 @@
       bitrate: bitrate
     });
 
-    if (useSamplerate) {
+    if (inputSamplerate !== samplerate) {
       enc = new Webcast.Encoder.Resample({
         encoder: enc,
-        ratio: samplerateRatio
+        ratio: parseFloat(samplerate) / parseFloat(inputSamplerate)
       });
     }
 
@@ -77,7 +85,7 @@
   function createWebcastNode(source) {
     webcast = new Webcast.Node({
       uri: wsUri,
-      encoder: createEncoder(),
+      encoder: createEncoder(audioContext.sampleRate),
       context: audioContext,
       options: {passThrough: passThrough}
     });
@@ -91,7 +99,7 @@
     createAudioContext();
 
     if (useMad) {
-      var enc = createEncoder();
+      var enc = createEncoder(audioContext.sampleRate);
       var socket = webcast = new Webcast.Socket({
         uri: wsUri,
         mime: enc.mime,
@@ -123,11 +131,8 @@
               // Screw you crazy specs and encoders.
               if (!handler) {
                 format = decoder.getCurrentFormat();
-                useSamplerate = false;
                 if (format.sampleRate !== samplerate) {
-                  useSamplerate = true;
-                  samplerateRatio = samplerate / format.sampleRate;
-                  enc = createEncoder();
+                  enc = createEncoder(format.sampleRate);
                 }
                 var frameDuration = 1000*parseFloat(data[0].length)/format.sampleRate;
 
@@ -160,15 +165,28 @@
       audioSource.play();
     }, false);
 
-    document.getElementById("player").appendChild(audioSource);
+    $("#player").append(audioSource);
   }
 
   function init() {
-    document.getElementById('play-audio').onclick = function() {
+    $("#play-audio").click(function() {
       createAudioSource();
-    };
+    });
 
-    document.getElementById('record-audio').onclick = function () {
+    var el, i, v;
+    for (i = 0; i<samplerates.length; i++) {
+      v = samplerates[i];
+      el = $("<option value='" + v + "'" + (samplerate == v ? "selected" : "") + ">" + v + "</option>");
+      $("#samplerate").append(el);
+    }
+
+    for (i = 0; i<bitrates.length; i++) {
+      v = bitrates[i];
+      el = $("<option value='" + v + "'" + (bitrate == v ? "selected" : "") + ">" + v + "</option>");
+      $("#bitrate").append(el);
+    }
+
+    $("#record-audio").click(function () {
       navigator.getUserMedia({audio:true, video:false}, function (stream) {
         killWebcast();
 
@@ -179,55 +197,56 @@
       }, function(e) {
         console.log("getUserMedia error: "+e.name+" "+e.message);
       });
-    };
+    });
 
-    document.getElementById('send-metadata').onclick = function () {
+    $("#send-metadata").click(function () {
       if (webcast) {
         webcast.sendMetadata({
-          title:  document.getElementById("title").value,
-          artist: document.getElementById("artist").value
+          title:  $("#title").val(),
+          artist: $("#artist").val()
         });
       }
-    };
+    });
 
-    document.getElementById("mp3").onchange = function () {
+    $("#mp3").change(function () {
       if (this.checked)
         encoder = Webcast.Encoder.Mp3;
-    };
-    document.getElementById("raw").onchange = function () {
+    });
+
+    $("#raw").change(function () {
       if (this.checked)
         encoder = Webcast.Encoder.Raw;
-    };
+    });
 
-    document.getElementById("stop").onclick = function () {
+    $("#stop").click(function () {
       killWebcast();
-    };
+    });
 
-    document.getElementById("file").onchange = function () {
+    $("#file").change(function () {
       file = this.files[0];
-    };
+    });
 
-    document.getElementById("asynchronous").onchange = function () {
+    $("#asynchronous").change(function () {
       useAsynchronous = this.checked;
-    };
+    });
 
-    document.getElementById("passThrough").onchange = function () {
+    $("#passThrough").change(function () {
       passThrough = this.checked; 
-    };
+    });
 
-    document.getElementById("mad").onchange = function () {
+    $("#mad").change(function () {
       useMad = this.checked;
       if (useMad) {
-        document.getElementById("file").accept = "audio/mpeg";
-        document.getElementById("passThrough").checked = false;
+        $("#file").attr({accept: "audio/mpeg"});
+        $("#passThrough").removeAttr("checked");
         passThrough = false;
       } else {
-        document.getElementById("file").accept = "audio/*";
+        $("#file").attr({accept: "audio/*"});
       }
-    };
+    });
   }
 
-  window.addEventListener("load", init, false);
+  $(init);
 </script>
 
 <h2>Webcast Client Test</h2>
@@ -236,8 +255,11 @@ Encoder:
 <input type="radio" name="encoder" value="raw"   id="raw">Raw<br>
 <br>
 Encoding setup:<br>
-Channels: <input type="text"  value="2"     id="channels">(max: 2)</br>
-Bitrate:  <input type="text"  value="128"   id="bitrate"></br>
+Channels:
+  <input type="radio" name="channels" value="2" id="stereo" checked>Stereo
+  <input type="radio" name="channels" value="1">Mono<br>
+Samplerate: <select id="samplerate"></select><br>
+  Bitrate:  <select id="bitrate"></select><br>
 <br>
 Play stream locally: <input type="checkbox" id="passThrough"><br>
 Use asynchronous worker: <input type="checkbox" id="asynchronous"><br>
