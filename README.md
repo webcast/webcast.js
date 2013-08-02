@@ -62,7 +62,9 @@ at `src/webcast.coffee`. If you do not like caffeine, you can also use the compi
 
 The API contains several classes:
 
-* `Webcast.Encoder.{Raw, Lame, Shine}`: the set of currently available encoders
+* `Webcast.Encoder.Raw`: encoder returning raw s8 samples.
+* `Webcast.Encoder.Mp3`: encoder returning mp3 data. Requires [libshine.js](https://github.com/savonet/shine/tree/master/js).
+* `Webcast.Encoder.Resampler`: wrapper to resample encoder's input. Requires [libsamplerate.js](https://github.com/savonet/libsamplerate-js).
 * `Webcast.Encoder.Worker`: a wrapper to encode in a [Web Worker](http://www.w3.org/TR/workers/)
 * `Webcast.Socket`: A simple wrapper around `Websockets` that implements the `webcast` protocol.
 * `Webcast.Node`: A wrapper to create a `webcast` node, in-par with the Web Audio API.

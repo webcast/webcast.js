@@ -1705,16 +1705,18 @@ run();
 // libmad function wrappers
 var float32Len = Module.HEAPF32.BYTES_PER_ELEMENT;
 var ptrLen   = Module.HEAP32.BYTES_PER_ELEMENT;
+var int8Len = Module.HEAP8.BYTES_PER_ELEMENT;
+var int16Len = Module.HEAP16.BYTES_PER_ELEMENT;
 var decoders = {};
 Mad = function (opts) {
  this._file = opts.file;
  this._mad = _mad_js_init();
  this._processing = false;
  this._pending = [];
- this._channels = _malloc(1);
- this._samples = _malloc(1);
- this._samplerate = _malloc(2);
- this._bitrate = _malloc(2);
+ this._channels = _malloc(int8Len);
+ this._samples = _malloc(int16Len);
+ this._samplerate = _malloc(int16Len);
+ this._bitrate = _malloc(int16Len);
  decoders[this._mad] = this;
  return this;
 };

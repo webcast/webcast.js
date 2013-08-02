@@ -11,10 +11,10 @@ class Webcast.Encoder.Raw
         encoder: "RAW u8 encoder"
 
   toString: -> """
-    new Webcast.Encoder.Raw({
+    (new Webcast.Encoder.Raw({
       channels: #{@channels}, 
       samplerate: #{@samplerate}
-    })
+     }))
                """
 
   encode: (data, fn) ->
@@ -27,53 +27,11 @@ class Webcast.Encoder.Raw
 
     fn buf
 
-origLame = Lame
-
-class Webcast.Encoder.Lame
+class Webcast.Encoder.Mp3
   mime: "audio/mpeg"
 
   constructor: ({@samplerate, @bitrate, @channels}) ->
-    @lame = origLame.init()
-    origLame.set_bitrate @lame, @bitrate
-
-    if @channels == 1
-      origLame.set_mode @lame, origLame.MONO
-    else
-      origLame.set_mode @lame, origLame.JOINT_STEREO
-    
-    origLame.set_num_channels @lame, @channels
-    origLame.set_out_samplerate @lame, @samplerate
-    origLame.init_params @lame
-
-    @info =
-      audio:
-        channels: @channels
-        samplerate: @samplerate
-        bitrate: @bitrate
-        encoder: "libmp3lame"
-
-    this
-
-  toString: -> """
-    new Webcast.Encoder.Lame({
-      bitrate: #{@bitrate},
-      channels: #{@channels},
-      samplerate: #{@samplerate}
-    })
-               """
-
-  encode: (data, fn) ->
-    chan_l = data[0]
-    chan_r = data[1] || data[0]
-    fn origLame.encode_buffer_ieee_float(@lame, chan_l, chan_r).data
-
-  origShine = Shine
-
-class Webcast.Encoder.Shine
-  mime: "audio/mpeg"
-
-  constructor: ({@samplerate, @bitrate, @channels}) ->
-    @shine = new origShine
+    @shine = new Shine
       samplerate: @samplerate
       bitrate:    @bitrate
       channels:   @channels
@@ -89,15 +47,59 @@ class Webcast.Encoder.Shine
     this
 
   toString: -> """
-    new Webcast.Encoder.Shine({
+    (new Webcast.Encoder.Mp3({
       bitrate: #{@bitrate},
       channels: #{@channels},
       samplerate: #{@samplerate}
-    })
+     }))
                """
 
   encode: (data, fn) ->
     fn @shine.encode(data)
+
+class Webcast.Encoder.Resample
+  constructor: ({@encoder, @ratio, @type}) ->
+    @mime       = @encoder.mime
+    @info       = @encoder.info
+    @channels   = @encoder.channels
+    @type       = @type || Samplerate.FASTEST
+    @resamplers = []
+    @remaining  = []
+
+    for i in [0..@channels-1]
+      @resamplers[i] = new Samplerate
+        type: @type
+
+      @remaining[i] = new Float32Array
+
+  toString: -> """
+    (new Webcast.Encoder.Resample({
+      encoder: #{@encoder.toString()},
+      ratio: #{@ratio},
+      type: #{@type}
+     }))
+               """
+
+  encode: (buffer, fn) ->
+    concat = (a,b) ->
+      if typeof b == "undefined"
+        return a
+
+      ret = new Float32Array a.length+b.length
+      ret.set a
+      ret.subarray(a.length).set b
+      ret
+
+    for i in [0..buffer.length-1]
+      buffer[i] = concat @remaining[i], buffer[i]
+      {data, used} = @resamplers[i].process
+        data:  buffer[i]
+        ratio: @ratio
+
+      @remaining[i] = buffer[i].subarray used
+      buffer[i] = data
+
+    @encoder.encode buffer, fn
 
 # This will only work in the browser!
 if typeof Worker != "undefined"

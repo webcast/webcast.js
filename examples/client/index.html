@@ -2,8 +2,8 @@
 <meta charset="utf-8"/>
 <title>Webcase client Test</title>
 <script src="libshine.js"></script>
-<script src="libmp3lame.js"></script>
 <script src="libmad.js"></script>
+<script src="libsamplerate.js"></script>
 <script src="webcast.js"></script>
 <script language="javascript" type="text/javascript">
   navigator.getUserMedia  = navigator.getUserMedia || navigator.webkitGetUserMedia || navigator.mozGetUserMedia || navigator.msGetUserMedia;
@@ -14,7 +14,7 @@
   var bitrate = 128;
   var channels = 2;
   var samplerate;
-  var encoder = Webcast.Encoder.Lame;
+  var encoder = Webcast.Encoder.Mp3;
   var audioContext;
   var webcast;
   var passThrough = false;
@@ -57,7 +57,7 @@
 
     if (useWorker) {
       enc = new Webcast.Encoder.Worker({
-        scripts: ["http://localhost:8000/libmp3lame.js", "http://localhost:8000/libshine.js", "http://localhost:8000/webcast.js"],
+        scripts: ["http://localhost:8000/libsamplerate.js", "http://localhost:8000/libshine.js", "http://localhost:8000/webcast.js"],
         encoder: enc
       });
     }
@@ -88,29 +88,45 @@
         mime: enc.mime,
         info: enc.info
       }); 
+
+      var format;
+      var handler;
       var create = function () {
         createMadDecoder(file, function (decoder) {
           var fn = function (data, err) {
-            var start = new Date;
             if (!socket.isOpen()) {
               return;
             }
             if (err) {
+              clearInterval(handler);
+              format = handler = null;
               create();
               return;
             }
+            
             data = data.slice(0,channels);
             enc.encode(data, function (encoded) {
               if (webcast) {
                 webcast.sendData(encoded);
               }
-              var stop = new Date;
-              var frameDuration = 1000*parseFloat(data[0].length)/samplerate;
-              var timeout = Math.max(frameDuration - stop.getTime() + start.getTime(), 0);
-              // We wait for that frame to expire.
-              setTimeout(function () {
-                decoder.decodeFrame(fn);
-              }, timeout);
+
+              // Let's pretend format does not change accross mp3 frame,
+              // Screw you crazy specs and encoders.
+              if (!handler) {
+                format = decoder.getCurrentFormat();
+                if (format.sampleRate !== samplerate) {
+                  enc = new Webcast.Encoder.Resample({
+                    encoder: createEncoder(),
+                    ratio: samplerate / format.sampleRate
+                  });
+                }
+                var frameDuration = 1000*parseFloat(data[0].length)/format.sampleRate;
+
+                // Now, execute this function every frameDuration.
+                handler = setInterval(function () {
+                  decoder.decodeFrame(fn);
+                }, frameDuration);
+              }
             });
           };
           decoder.decodeFrame(fn);
@@ -139,14 +155,11 @@
   }
 
   function init() {
-    console.log("Initializing.");
-
     document.getElementById('play-audio').onclick = function() {
       createAudioSource();
     };
 
     document.getElementById('record-audio').onclick = function () {
-      console.log("Clicked record.");
       navigator.getUserMedia({audio:true, video:false}, function (stream) {
         killWebcast();
 
@@ -161,7 +174,6 @@
 
     document.getElementById('send-metadata').onclick = function () {
       if (webcast) {
-        console.log("Send metadata.");
         webcast.sendMetadata({
           title:  document.getElementById("title").value,
           artist: document.getElementById("artist").value
@@ -169,13 +181,9 @@
       }
     };
 
-    document.getElementById("lame").onchange = function () {
+    document.getElementById("mp3").onchange = function () {
       if (this.checked)
-        encoder = Webcast.Encoder.Lame;
-    };
-    document.getElementById("shine").onchange = function () {
-      if (this.checked)
-        encoder = Webcast.Encoder.Shine;
+        encoder = Webcast.Encoder.Mp3;
     };
     document.getElementById("raw").onchange = function () {
       if (this.checked)
@@ -194,10 +202,6 @@
       useWorker = this.checked;
     };
 
-    document.getElementById("asynchronous").onchange = function () {
-      useWorker = this.checked;
-    };
-
     document.getElementById("passThrough").onchange = function () {
       passThrough = this.checked; 
     };
@@ -206,6 +210,8 @@
       useMad = this.checked;
       if (useMad) {
         document.getElementById("file").accept = "audio/mpeg";
+        document.getElementById("passThrough").checked = false;
+        passThrough = false;
       } else {
         document.getElementById("file").accept = "audio/*";
       }
@@ -217,8 +223,7 @@
 
 <h2>Webcast Client Test</h2>
 Encoder:
-<input type="radio" name="encoder" value="lame"  id="lame" checked>Lame
-<input type="radio" name="encoder" value="shine" id="shine">Shine
+<input type="radio" name="encoder" value="mp3" id="mp3" checked>MP3
 <input type="radio" name="encoder" value="raw"   id="raw">Raw<br>
 <br>
 Encoding setup:<br>
