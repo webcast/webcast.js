@@ -101,7 +101,7 @@ function createMadSource() {
   var format;
   var handler;
   var create = function () {
-    createMadDecoder(file, function (decoder) {
+    file.createMadDecoder(function (decoder) {
       var fn = function (data, err) {
         if (!socket.isOpen()) {
           clearInterval(handler);
