@@ -15,6 +15,7 @@ var webcast;
 var passThrough = false;
 var useAsynchronous = false;
 var useMad = false;
+var loop = false;
 var audioSource;
 
 function createAudioContext() {
@@ -103,15 +104,17 @@ function createMadSource() {
   var create = function () {
     file.createMadDecoder(function (decoder) {
       var fn = function (data, err) {
-        if (!socket.isOpen()) {
+        if (!socket.isOpen() || err) {
           clearInterval(handler);
           format = handler = null;
-          return;
-        }
-        if (err) {
-          clearInterval(handler);
-          format = handler = null;
-          create();
+          decoder.close();
+
+          enc.close(function (data) {
+            if (socket.isOpen() && loop) {
+              socket.send(data);
+              create();
+            }
+          });
           return;
         }
 
@@ -240,6 +243,10 @@ function init() {
 
   $("#passThrough").change(function () {
     passThrough = this.checked;
+  });
+
+  $("#loop").change(function () {
+    loop = this.checked;
   });
 
   $("#mad").change(function () {

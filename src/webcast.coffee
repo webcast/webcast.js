@@ -17,6 +17,9 @@ class Webcast.Encoder.Raw
      }))
                """
 
+  close: (fn) ->
+    fn new Uint8Array
+
   encode: (data, fn) ->
     channels = data.length
     samples  = data[0].length
@@ -54,6 +57,9 @@ class Webcast.Encoder.Mp3
      }))
                """
 
+  close: (fn) ->
+    fn @shine.close()
+
   encode: (data, fn) ->
     fn @shine.encode(data)
 
@@ -80,6 +86,17 @@ class Webcast.Encoder.Resample
       type: #{@type}
      }))
                """
+
+  close: (fn) ->
+    for i in [0..buffer.length-1]
+      {data} = @resamplers[i].process
+        data: @remaining[i]
+        ratio: @ratio
+        last: true
+
+    @samplerate.close()
+
+    @encoder.close data, fn
 
   encode: (buffer, fn) ->
     concat = (a,b) ->
@@ -126,6 +143,13 @@ class Webcast.Encoder.Asynchronous
           });
           return;
         }
+        if (type === "close") {
+          encoder.close(function (buffer) {
+            postMessage({close:true, buffer:buffer});
+            self.close();
+          });
+          return;
+        }
       };
              """
 
@@ -142,8 +166,32 @@ class Webcast.Encoder.Asynchronous
     }))
                """
 
+  close: (fn) ->
+    @worker.onmessage = ({data}) =>
+      if !data.close
+        @pending.push data
+        return
+
+      @pending.push data.buffer
+
+      len = 0
+      for chunk in @pending
+        len += chunk.length
+
+      ret = new Uint8Array len
+      offset = 0
+      for chunk in @pending
+        ret.set chunk, offset
+        offset += chunk.length
+
+      fn ret
+
+    @worker.postMessage
+      type: "close"
+
+
   encode: (buffer, fn) ->
-    @worker?.postMessage
+    @worker.postMessage
       type: "buffer"
       data: buffer
 
@@ -226,7 +274,9 @@ Webcast.Node = ({url, @encoder, context, options}) ->
       @socket.sendData(data) if data?
 
   node.close = =>
-    @socket.close()
+    @encoder.close (data) =>
+      @socket.send data
+      @socket.close()
 
   node.sendMetadata = (metadata) =>
     @socket.sendMetadata metadata
