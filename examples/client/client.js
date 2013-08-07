@@ -174,6 +174,13 @@ function init() {
     }
   });
 
+  $("#metadata").click(function () {
+    file.readTaglibMetadata(function (data) {
+      $("#artist").val(data.metadata.artist);
+      $("#title").val(data.metadata.title);
+    });
+  });
+
   var el, i, v;
   for (i = 0; i<samplerates.length; i++) {
     v = samplerates[i];
