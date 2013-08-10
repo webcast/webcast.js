@@ -1,7 +1,7 @@
 Webcast.js API
 --------------
 
-The `webcast.js` involves several cutting-edge technologies and, thus, require a fairly modern browser. 
+`webcast.js` involves several cutting-edge technologies and, thus, require a fairly modern browser. 
 Here's a quick summary of the technologies required:
 
 * [WebSocket API](http://www.w3.org/TR/2011/WD-websockets-20110929/): This is the transport layer. It is readily available in most modern browsers.
