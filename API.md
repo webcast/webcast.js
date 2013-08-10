@@ -6,10 +6,7 @@ Here's a quick summary of the technologies required:
 
 * [WebSocket API](http://www.w3.org/TR/2011/WD-websockets-20110929/): This is the transport layer. It is readily available in most modern browsers.
 * [Web Audio API](https://dvcs.w3.org/hg/audio/raw-file/tip/webaudio/specification.html): This is the API used to manipulate audio and video data inside the browser. It is currently fully implemented in Chrome and only partially in Firefox Nightly.
-* [asm.js](http://asmjs.org/): This is the techonology used to optimize the mp3 encoder. It is currently only supported by Firefox.
-
-All in all, the protocol will be fully usable with [Firefox Nightly](http://nightly.mozilla.org/) once they finish implementing the Web Audio API 
-and in Chrome once they fully support `asm.js`.
+* [asm.js](http://asmjs.org/): This is the techonology used to optimize the mp3 encoder. It is currently only supported by Firefox though Chrome is starting to show good performances with it.
 
 ### The API
 
