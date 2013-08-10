@@ -42,8 +42,8 @@ if (inputSampleRate !== 44100) {
 if (useWorker) {
   encoder = new Webcast.Encoder.Asynchronous({
     encoder: encoder,
-    scripts: [(...], // full path to required scripts for the worker.
-                     // usually includes requires encoders and webcast.js 
+    scripts: ["http://bla.com/webcast.js", ...], // full path to required scripts for the worker.
+                                                 // usually includes requires encoders and webcast.js  
   });
 }
 
