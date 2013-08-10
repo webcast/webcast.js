@@ -44,8 +44,8 @@ liquidsoap 'output.ao(fallible=true,audio_to_stereo(input.harbor("mount",port=80
 
 ### Webcast.js API
 
-See [API.md](https://github.com/webcast/webcast.js/blob/master/API.md)
+See [API](https://github.com/webcast/webcast.js/blob/master/API.md)
 
 ### Protocol Specifications
 
-See [SPECS.md](https://github.com/webcast/webcast.js/blob/master/SPECS.md)
+See [SPECS](https://github.com/webcast/webcast.js/blob/master/SPECS.md)
