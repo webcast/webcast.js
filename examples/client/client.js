@@ -1,7 +1,6 @@
 navigator.getUserMedia  = navigator.getUserMedia || navigator.webkitGetUserMedia || navigator.mozGetUserMedia || navigator.msGetUserMedia;
 
 // Configuration
-var wsUri = "ws://localhost:8080/mount";
 var file;
 var bitrate = 128;
 var bitrates = [ 8, 16, 24, 32, 40, 48, 56, 64, 80, 96, 112, 128, 144, 160, 192, 224, 256, 320 ];
@@ -79,7 +78,7 @@ function createEncoder(inputSamplerate) {
 
 function createWebcastNode(source) {
   webcast = new Webcast.Node({
-    url: wsUri,
+    url: $("#uri").val(),
     encoder: createEncoder(audioContext.sampleRate),
     context: audioContext,
     options: {passThrough: passThrough}
@@ -94,7 +93,7 @@ function createMadSource() {
 
   var enc = createEncoder();
   var socket = webcast = new Webcast.Socket({
-    url: wsUri,
+    url: $("#uri").val(),
     mime: enc.mime,
     info: enc.info
   });
