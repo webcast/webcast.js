@@ -275,7 +275,7 @@ Webcast.Node = ({url, @encoder, context, options}) ->
 
   node.close = =>
     @encoder.close (data) =>
-      @socket.send data
+      @socket.sendData data
       @socket.close()
 
   node.sendMetadata = (metadata) =>
