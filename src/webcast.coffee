@@ -88,7 +88,7 @@ class Webcast.Encoder.Resample
                """
 
   close: (fn) ->
-    for i in [0..buffer.length-1]
+    for i in [0..@remaining.length-1]
       {data} = @resamplers[i].process
         data: @remaining[i]
         ratio: @ratio
