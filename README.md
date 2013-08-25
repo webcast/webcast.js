@@ -21,7 +21,7 @@ in browsers, thus providing a readily available browser client to stream local f
 
 #### Client
 
-A fully functional client is available for testing at [webcast/webcaster.js](https://github.com/webcast/webcaster).
+A fully functional client is available for testing at [webcast/webcaster](https://github.com/webcast/webcaster).
 
 #### Server
 
