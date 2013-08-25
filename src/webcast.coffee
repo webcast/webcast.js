@@ -61,6 +61,7 @@ class Webcast.Encoder.Mp3
     fn @shine.close()
 
   encode: (data, fn) ->
+    data = data.slice 0, @channels
     fn @shine.encode(data)
 
 class Webcast.Encoder.Resample
@@ -93,8 +94,6 @@ class Webcast.Encoder.Resample
         data: @remaining[i]
         ratio: @ratio
         last: true
-
-    @samplerate.close()
 
     @encoder.close data, fn
 
@@ -243,43 +242,48 @@ Webcast.Socket = ({url, mime, info}) ->
 
   socket
 
-Webcast.Node = ({url, @encoder, context, options}) ->
-  @socket = new Webcast.Socket
-    url:  url
-    mime: @encoder.mime
-    info: @encoder.info
+AudioContext = window.webkitAudioContext || window.AudioContext
 
-  @options =
-    passThrough: false
-    bufferSize: 4096
+AudioContext::createWebcastSource = (bufferSize, channels, passThrough) ->
+  node = @createScriptProcessor bufferSize, channels, channels
 
-  for key, value of options
-    @options[key] = value
+  passThrough ||= false
 
-  node = context.createScriptProcessor @options.bufferSize, @encoder.channels, @encoder.channels
+  options =
+    encoder: null
+    socket: null
+    passThrough: passThrough || false
 
-  node.webcast = this
-
-  node.onaudioprocess = (buf) =>
+  node.onaudioprocess = (buf) ->
     audio = []
-    for channel in [0..@encoder.channels-1]
+    for channel in [0..buf.inputBuffer.numberOfChannels-1]
       channelData = buf.inputBuffer.getChannelData channel
       audio[channel] = channelData
 
-      if @options.passThrough
-        # Copy data to output buffer
-        buf.outputBuffer.getChannelData(channel).set channelData
+      buf.outputBuffer.getChannelData(channel).set channelData if options.passThrough
 
-    @encoder.encode audio, (data) =>
-      @socket.sendData(data) if data?
+    options.encoder?.encode audio, (data) ->
+      options.socket?.sendData(data) if data?
 
-  node.close = =>
-    @encoder.close (data) =>
-      @socket.sendData data
-      @socket.close()
+  node.connectSocket = (encoder, url) ->
+    options.encoder = encoder
+    options.socket = new Webcast.Socket
+      url:  url
+      mime: options.encoder.mime
+      info: options.encoder.info
+
+  node.close = (cb) ->
+    options.encoder.close (data) ->
+      options.socket?.sendData data
+      options.socket?.close()
+      options.socket = options.encoder = null
+      cb?()
 
   node.sendMetadata = (metadata) =>
-    @socket.sendMetadata metadata
+    options.socket?.sendMetadata metadata
+
+  node.isOpen = ->
+    options?.socket.isOpen()
 
   node
 
