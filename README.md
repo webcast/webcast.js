@@ -21,13 +21,7 @@ in browsers, thus providing a readily available browser client to stream local f
 
 #### Client
 
-The `examples/client/` directory of this repository contains a client example, sending mp3 encoded data, using 
-[libshine.js](https://github.com/savonet/shine/tree/master/js) or raw PCM data.
-
-You can start the client by executing `make` in the repository. You will need a functional `python` binary 
-with the `SimpleHTTPServer` module.
-
-Once started, you can point your browser to [http://localhost:8000/](http://localhost:8000/).
+A fully functional client is available for testing at [webcast/webcaster.js](https://github.com/webcast/webcaster).
 
 #### Server
 
