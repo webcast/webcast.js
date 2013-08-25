@@ -57,9 +57,16 @@ var webcast = new Webcast.Node({
 source.connect(webcast);
 webcast.connect(audioContext.destination);
 
+webcast.connectSocket():
+
 webcast.sendMetadata({
   title:  "My Awesome Stream",
   artist: "The Dude"
+});
+
+//... Later ...
+webcast.close(function () {
+  console.log("connection closed!");
 });
 
 ```
