@@ -242,52 +242,52 @@ Webcast.Socket = ({url, mime, info}) ->
 
   socket
 
-AudioContext = window.webkitAudioContext || window.AudioContext
-
-AudioContext::createWebcastSource = (bufferSize, channels, passThrough) ->
-  node = @createScriptProcessor bufferSize, channels, channels
-
-  passThrough ||= false
-
-  options =
-    encoder: null
-    socket: null
-    passThrough: passThrough || false
-
-  node.onaudioprocess = (buf) ->
-    audio = []
-    for channel in [0..buf.inputBuffer.numberOfChannels-1]
-      channelData = buf.inputBuffer.getChannelData channel
-      audio[channel] = channelData
-
-      buf.outputBuffer.getChannelData(channel).set channelData if options.passThrough
-
-    options.encoder?.encode audio, (data) ->
-      options.socket?.sendData(data) if data?
-
-  node.connectSocket = (encoder, url) ->
-    options.encoder = encoder
-    options.socket = new Webcast.Socket
-      url:  url
-      mime: options.encoder.mime
-      info: options.encoder.info
-
-  node.close = (cb) ->
-    options.encoder.close (data) ->
-      options.socket?.sendData data
-      options.socket?.close()
-      options.socket = options.encoder = null
-      cb?()
-
-  node.sendMetadata = (metadata) =>
-    options.socket?.sendMetadata metadata
-
-  node.isOpen = ->
-    options?.socket.isOpen()
-
-  node
-
 if typeof window != "undefined"
+  AudioContext = window.webkitAudioContext || window.AudioContext
+
+  AudioContext::createWebcastSource = (bufferSize, channels, passThrough) ->
+    node = @createScriptProcessor bufferSize, channels, channels
+
+    passThrough ||= false
+
+    options =
+      encoder: null
+      socket: null
+      passThrough: passThrough || false
+
+    node.onaudioprocess = (buf) ->
+      audio = []
+      for channel in [0..buf.inputBuffer.numberOfChannels-1]
+        channelData = buf.inputBuffer.getChannelData channel
+        audio[channel] = channelData
+
+        buf.outputBuffer.getChannelData(channel).set channelData if options.passThrough
+
+      options.encoder?.encode audio, (data) ->
+        options.socket?.sendData(data) if data?
+  
+    node.connectSocket = (encoder, url) ->
+      options.encoder = encoder
+      options.socket = new Webcast.Socket
+        url:  url
+        mime: options.encoder.mime
+        info: options.encoder.info
+
+    node.close = (cb) ->
+      options.encoder.close (data) ->
+        options.socket?.sendData data
+        options.socket?.close()
+        options.socket = options.encoder = null
+        cb?()
+
+    node.sendMetadata = (metadata) =>
+      options.socket?.sendMetadata metadata
+
+    node.isOpen = ->
+      options?.socket.isOpen()
+
+    node
+
   window.Webcast = Webcast
 
 if typeof self != "undefined"
