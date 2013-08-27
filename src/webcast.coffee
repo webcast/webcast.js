@@ -261,7 +261,10 @@ if typeof window != "undefined"
         channelData = buf.inputBuffer.getChannelData channel
         audio[channel] = channelData
 
-        buf.outputBuffer.getChannelData(channel).set channelData if options.passThrough
+        if options.passThrough
+          buf.outputBuffer.getChannelData(channel).set channelData
+        else
+          buf.outputBuffer.getChannelData(channel).set (new Float32Array channelData.length)
 
       options.encoder?.encode audio, (data) ->
         options.socket?.sendData(data) if data?
