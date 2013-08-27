@@ -265,6 +265,9 @@ if typeof window != "undefined"
 
       options.encoder?.encode audio, (data) ->
         options.socket?.sendData(data) if data?
+
+    node.setPassThrough = (b) ->
+      options.passThrough = b
   
     node.connectSocket = (encoder, url) ->
       options.encoder = encoder
