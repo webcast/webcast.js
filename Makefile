@@ -1,2 +1,2 @@
 all:
-	coffee -c -o lib src/*.coffee
+	coffee -c -j lib/webcast.js src/webcast.coffee src/components/*.coffee
