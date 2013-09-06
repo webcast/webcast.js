@@ -1,2 +1,7 @@
+OPTIONS:=-c -j lib/webcast.js src/webcast.coffee src/components/*.coffee
+
 all:
-	coffee -c -j lib/webcast.js src/webcast.coffee src/components/*.coffee
+	coffee $(OPTIONS)
+
+watch:
+	coffee -w $(OPTIONS)

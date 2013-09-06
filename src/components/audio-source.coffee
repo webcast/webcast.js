@@ -2,11 +2,14 @@ if typeof window != "undefined"
   AudioContext = window.webkitAudioContext || window.AudioContext
 
   AudioContext::createWebcastSource = (bufferSize, channels, passThrough) ->
-    node = @createScriptProcessor bufferSize, channels, channels
+    context = this
+
+    node = context.createScriptProcessor bufferSize, channels, channels
 
     passThrough ||= false
 
     options =
+      recorderSource: null
       encoder: null
       socket: null
       passThrough: passThrough || false
@@ -22,13 +25,19 @@ if typeof window != "undefined"
         else
           buf.outputBuffer.getChannelData(channel).set (new Float32Array channelData.length)
 
-      options.encoder?.encode audio, (data) ->
+      options.encoder?.encode? audio, (data) ->
         options.socket?.sendData(data) if data?
 
     node.setPassThrough = (b) ->
       options.passThrough = b
 
     node.connectSocket = (encoder, url) ->
+      if encoder instanceof Webcast.Recorder
+        options.recorderSource = context.createMediaStreamDestination()
+        node.connect options.recorderSource
+        encoder.start options.recoderSource.stream, (data) ->
+          options.socket?.sendData(data) if data?
+
       options.encoder = encoder
       options.socket = new Webcast.Socket
         url:  url
@@ -36,11 +45,19 @@ if typeof window != "undefined"
         info: options.encoder.info
 
     node.close = (cb) ->
-      options.encoder.close (data) ->
-        options.socket?.sendData data
+      options.recorderSource?.disconnect()
+      options.recorderSource = null
+
+      fn = ->
         options.socket?.close()
         options.socket = options.encoder = null
         cb?()
+
+      return fn() unless options.encoder?.close?
+
+      options.encoder.close (data) ->
+        options.socket?.sendData data
+        fn()
 
     node.sendMetadata = (metadata) =>
       options.socket?.sendMetadata metadata
