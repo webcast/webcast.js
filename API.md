@@ -1,7 +1,7 @@
 Webcast.js API
 --------------
 
-`webcast.js` involves several cutting-edge technologies and, thus, require a fairly modern browser. 
+`webcast.js` involves several cutting-edge technologies and, thus, require a fairly modern browser.
 Here's a quick summary of the technologies required:
 
 * [WebSocket API](http://www.w3.org/TR/2011/WD-websockets-20110929/): This is the transport layer. It is readily available in most modern browsers.
@@ -35,7 +35,7 @@ var encoder = new Webcast.Encoder.Mp3({
 if (inputSampleRate !== 44100) {
   encoder = new Webcast.Encoder.Resample({
     encoder:    encoder,
-    samplerate: inputSampleRate 
+    samplerate: inputSampleRate
   });
 }
 
@@ -43,7 +43,7 @@ if (useWorker) {
   encoder = new Webcast.Encoder.Asynchronous({
     encoder: encoder,
     scripts: ["http://bla.com/webcast.js", ...], // full path to required scripts for the worker.
-                                                 // usually includes requires encoders and webcast.js  
+                                                 // usually includes requires encoders and webcast.js
   });
 }
 
@@ -71,5 +71,5 @@ webcast.close(function () {
 
 ```
 
-You can also look at the [example client's code](https://github.com/webcast/webcast.js/blob/master/examples/client/client.js)
+You can also look at the [example client code](https://github.com/webcast/webcaster/)
 for a more detailed use of the library.
