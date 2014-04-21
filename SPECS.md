@@ -1,6 +1,6 @@
 ### Webcast Protocol Specifications
 
-The `webcast` protocol is defined to stream binary multimedia data and text metadata through a websocket. 
+The `webcast` protocol is defined to stream binary multimedia data and text metadata through a websocket.
 
 A websocket for the `webcast` protocol MUST be initiated by passing the second argument as `"websocket"`:
 ```
@@ -22,10 +22,10 @@ Text frames MUST contain JSON-encoded data, with the following top-level structu
 ```
 Where the `data` field is OPTIONAL and `frameData` can be any type of JSON-encoded data.
 
-Any implementation SHOULD raise an error upon receiving text frames that do not follow this structure. 
+Any implementation SHOULD raise an error upon receiving text frames that do not follow this structure.
 
 Any implementation SHOULD discard without raising an error text frames that follow this structure
-but contain a `type` that is not defined below. 
+but contain a `type` that is not defined below.
 
 The following text frames are currently documented and MUST be accepted by any implementation.
 
@@ -59,7 +59,7 @@ Here is an example of a `hello` frame of a `mp3` stream:
 `metadata` frames are used to transmit punctual metadata information. They are OPTIONAL as some
 binary format such as `ogg/vorbis` are capable of embedding their own metadata information.
 
-The type of a `medatada` frame MUST be `"metadata"` and its data MUST be a mapping of metadata keys 
+The type of a `medatada` frame MUST be `"metadata"` and its data MUST be a mapping of metadata keys
 and values.
 
 Here is an example of a `metadata` frame:
@@ -68,7 +68,7 @@ Here is an example of a `metadata` frame:
   type: "metadata",
   data: {
     title: "My Awesome track",
-    artist: "Some obscur artist you never heard of before"
+    artist: "Some obscure artist you never heard of before"
   }
 }
 ```
