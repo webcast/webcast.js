@@ -1,4 +1,13 @@
 Webcast.Socket = ({url, mime, info}) ->
+  parser = document.createElement "a"
+  parser.href = url
+
+  user     = parser.username
+  password = parser.password
+
+  parser.username = parser.password = ""
+  url = parser.href
+
   socket = new WebSocket url, "webcast"
 
   socket.mime = mime
@@ -6,6 +15,12 @@ Webcast.Socket = ({url, mime, info}) ->
 
   hello =
     mime: mime
+
+  if user? && user != ""
+    hello.user = socket.user = user
+
+  if password? && password != ""
+    hello.password = socket.password = password
 
   for key, value of info
     hello[key] = value

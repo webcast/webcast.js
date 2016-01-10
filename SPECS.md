@@ -43,7 +43,9 @@ Here is an example of a `hello` frame of a `mp3` stream:
 {
   type: "hello",
   data: {
-    mime:  "audio/mpeg",
+    mime:     "audio/mpeg",
+    user:     "username", // Optional
+    password: "hackme", // Optional
     audio: {
       channels: 2,
       samplerate: 44100,
