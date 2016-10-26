@@ -17,7 +17,7 @@ The library contains several classes:
 * `Webcast.Encoder.Resample`: a wrapper to resample encoder's input. Requires [libsamplerate.js](https://github.com/savonet/libsamplerate-js).
 * `Webcast.Encoder.Asynchronous`: a wrapper to encode in a [Web Worker](http://www.w3.org/TR/workers/)
 * `Webcast.Socket`: a simple wrapper around `WebSockets` that implements the `webcast` protocol.
-* `Webcast.Node`: a wrapper to create a `webcast` node, in-par with the Web Audio API.
+* `AudioContext::createWebcastSource`: a wrapper to create a `webcast` node, in-par with the Web Audio API.
 
 ### How to use?
 
@@ -47,17 +47,14 @@ if (useWorker) {
   });
 }
 
-var webcast = new Webcast.Node({
-  url: "ws://localhost:8080/mount",
-  encoder: encoder,
-  context: audioContext,
-  options: options
-});
+var context = new AudioContext;
+
+var webcast = context.createWebcastSource(4096, 2);
 
 source.connect(webcast);
 webcast.connect(audioContext.destination);
 
-webcast.connectSocket():
+webcast.connectSocket(encoder, "ws://localhost:8080/mount");
 
 webcast.sendMetadata({
   title:  "My Awesome Stream",

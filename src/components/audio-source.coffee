@@ -1,5 +1,5 @@
 if typeof window != "undefined"
-  AudioContext = window.webkitAudioContext || window.AudioContext
+  AudioContext = window.AudioContext || window.webkitAudioContext
 
   AudioContext::createWebcastSource = (bufferSize, channels, passThrough) ->
     context = this

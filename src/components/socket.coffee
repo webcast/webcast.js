@@ -39,7 +39,7 @@ Webcast.Socket = ({url, mime, info}) ->
   socket.sendData = (data) ->
     return unless socket.isOpen()
 
-    return unless data and data.length > 0
+    return unless data?.length > 0
 
     unless data instanceof ArrayBuffer
       data = data.buffer.slice data.byteOffset, data.length*data.BYTES_PER_ELEMENT

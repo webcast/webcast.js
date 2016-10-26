@@ -31,18 +31,18 @@ class Webcast.Encoder.Resample
 
     @encoder.close data, fn
 
+  concat: (a,b) ->
+    if typeof b == "undefined"
+      return a
+
+    ret = new Float32Array a.length+b.length
+    ret.set a
+    ret.subarray(a.length).set b
+    ret
+
   encode: (buffer, fn) ->
-    concat = (a,b) ->
-      if typeof b == "undefined"
-        return a
-
-      ret = new Float32Array a.length+b.length
-      ret.set a
-      ret.subarray(a.length).set b
-      ret
-
     for i in [0..buffer.length-1]
-      buffer[i] = concat @remaining[i], buffer[i]
+      buffer[i] = @concat @remaining[i], buffer[i]
       {data, used} = @resamplers[i].process
         data:  buffer[i]
         ratio: @ratio

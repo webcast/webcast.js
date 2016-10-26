@@ -1,7 +1,8 @@
-OPTIONS:=-c -j lib/webcast.js src/webcast.coffee src/components/*.coffee
+.PHONY: all clean
 
-all:
-	coffee $(OPTIONS)
+all: lib/webcast.js
 
-watch:
-	coffee -w $(OPTIONS)
+SOURCES := src/webcast.coffee $(wildcard src/components/*.coffee)
+
+lib/webcast.js: $(SOURCES)
+	cat $^ | coffee --compile --stdio > $@

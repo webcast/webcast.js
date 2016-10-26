@@ -14,15 +14,24 @@ class Webcast.Encoder.Raw
      }))
                """
 
-  close: (fn) ->
-    fn new Uint8Array
-
-  encode: (data, fn) ->
+  doEncode: (data) ->
     channels = data.length
     samples  = data[0].length
     buf = new Int8Array channels*samples
     for chan in [0..channels-1]
       for i in [0..samples-1]
         buf[channels*i + chan] = data[chan][i]*127
+    buf
 
-    fn buf
+  close: (data, fn) ->
+    ret = new Uint8Array
+
+    if fn?
+      ret = @doEncode data if data?.count > 0
+    else
+      fn = data
+
+    fn ret
+
+  encode: (data, fn) ->
+    fn @doEncode(data)

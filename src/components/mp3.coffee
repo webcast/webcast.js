@@ -25,8 +25,21 @@ class Webcast.Encoder.Mp3
      }))
                """
 
-  close: (fn) ->
-    fn @shine.close()
+  close: (data, fn) ->
+    rem = new Uint8Array
+
+    if fn?
+      rem = @shine.encode(data) if data?.length > 0
+    else
+      fn = data
+
+    flushed = @shine.close()
+
+    data = new Uint8Array(rem.length + flushed.length)
+    data.set rem
+    data.set flushed, rem.length
+
+    fn data
 
   encode: (data, fn) ->
     data = data.slice 0, @channels
