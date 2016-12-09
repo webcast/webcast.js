@@ -33,7 +33,7 @@ Alternatively, a fully functional implementation of the protocol is available in
 [liquidsoap](https://github.com/savonet/liquidsoap). To test it, you can simply run liquidsoap with the following
 command line:
 ```
-liquidsoap 'output.ao(fallible=true,audio_to_stereo(input.harbor("mount",port=8080)))'
+liquidsoap "output.ao(fallible=true,audio_to_stereo(input.harbor('mount',port=8080)))"
 ```
 
 ### Webcast.js API
