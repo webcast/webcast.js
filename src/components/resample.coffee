@@ -41,7 +41,7 @@ class Webcast.Encoder.Resample
     ret
 
   encode: (buffer, fn) ->
-    for i in [0..buffer.length-1]
+    for i in [0..@channels-1]
       buffer[i] = @concat @remaining[i], buffer[i]
       {data, used} = @resamplers[i].process
         data:  buffer[i]
