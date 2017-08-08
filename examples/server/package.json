@@ -4,20 +4,21 @@
   "version": "0.0.1",
   "homepage": "https://github.com/savonet/webcast-websocket-reference",
   "author": "Romain Beauxis <toots@rastageeks.org",
-  "repository":
-    {
-      "type":"git",
-      "url":"git://github.com/savonet/webcast-websocket-reference.git"
-    },
-  "bugs":
-    {
-      "mail":"toots@rastageeks.org",
-      "url":"http://github.com/savonet/webcast-websocket-reference/issues"
-    },
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/savonet/webcast-websocket-reference.git"
+  },
+  "bugs": {
+    "mail": "toots@rastageeks.org",
+    "url": "http://github.com/savonet/webcast-websocket-reference/issues"
+  },
   "main": "server.coffee",
-  "engine": {"node": ">= 0.10.7", "npm": "1"},
+  "engine": {
+    "node": ">= 0.10.7",
+    "npm": "1"
+  },
   "dependencies": {
-    "coffee-script" : "1.6.3",
-    "websocket"     : "1.0.8"
+    "coffee-script": "1.6.3",
+    "websocket": "1.0.8"
   }
 }
