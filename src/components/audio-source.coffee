@@ -59,6 +59,9 @@ if typeof window != "undefined"
         options.socket?.sendData data
         fn()
 
+    node.getSocket = ->
+      options.socket
+
     node.sendMetadata = (metadata) =>
       options.socket?.sendMetadata metadata
 
