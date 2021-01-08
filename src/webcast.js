@@ -1,7 +1,7 @@
 class Socket {
   constructor ({mediaRecorder, url: rawUrl, info}) {
     const parser = document.createElement("a");
-    parser.href = rawUurl;
+    parser.href = rawUrl;
 
     const user = parser.username;
     const password = parser.password;
