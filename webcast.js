@@ -25,15 +25,29 @@ class Socket {
       }))
     );
 
-    mediaRecorder.ondataavailable = async e =>
-      this.socket.send(await e.data.arrayBuffer());
+    mediaRecorder.ondataavailable = e => this._sendData(e);
 
     mediaRecorder.onstop = async e => {
       if (e.data) {
-        this.socket.send(await e.data.arrayBuffer());
+        await this._sendData(e);
       }
-      this.socket.close();
+
+      if (this.isConnected()) {
+        this.socket.close();
+      }
     };
+  }
+
+  isConnected() {
+    return this.socket.readyState === WebSocket.OPEN;
+  }
+
+  async _sendData(e) {
+    const data = await e.data.arrayBuffer();
+
+    if (this.isConnected()) {
+      this.socket.send(data);
+    }
   }
 
   sendMetadata(data) {
