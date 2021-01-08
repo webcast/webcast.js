@@ -2,59 +2,29 @@ Webcast.js API
 --------------
 
 `webcast.js` involves several cutting-edge technologies and, thus, require a fairly modern browser.
-Here's a quick summary of the technologies required:
+It takes advantage of the following Javascript APIs:
 
 * [WebSocket API](http://www.w3.org/TR/2011/WD-websockets-20110929/): This is the transport layer. It is readily available in most modern browsers.
-* [Web Audio API](https://dvcs.w3.org/hg/audio/raw-file/tip/webaudio/specification.html): This is the API used to manipulate audio and video data inside the browser. It is currently implemented in Chrome and in [Firefox Nightly](http://nightly.mozilla.org/).
-* [asm.js](http://asmjs.org/): This is the techonology used to optimize the mp3 encoder. It is currently only supported by Firefox though Chrome is starting to show good performances with it.
+* [MediaRecorder API](https://developer.mozilla.org/en-US/docs/Web/API/MediaRecorder): This is the API used to encode data before sending it to liquidsoap.
 
 ### The API
 
-The library contains several classes:
+The library contains a single classes:
 
-* `Webcast.Encoder.Raw`: encoder returning raw s8 samples.
-* `Webcast.Encoder.Mp3`: encoder returning mp3 data. Requires [libshine.js](https://github.com/savonet/shine/tree/master/js).
-* `Webcast.Encoder.Resample`: a wrapper to resample encoder's input. Requires [libsamplerate.js](https://github.com/savonet/libsamplerate-js).
-* `Webcast.Encoder.Asynchronous`: a wrapper to encode in a [Web Worker](http://www.w3.org/TR/workers/)
-* `Webcast.Socket`: a simple wrapper around `WebSockets` that implements the `webcast` protocol.
-* `AudioContext::createWebcastSource`: a wrapper to create a `webcast` node, in-par with the Web Audio API.
+* `Webcast.Socket`: a specialized `WebSockets` that implements the `webcast` protocol using an instance of `MediaRecorder`.
 
 ### How to use?
 
 Here's a simple use of the library:
 
 ```
-var source = (...);
+var mediaRecorder = (...);
 
-var encoder = new Webcast.Encoder.Mp3({
-  channels: 2,
-  samplerate: 44100,
-  bitrate: 128
+var webcast = new Webcast.Socket({
+  mediaRecorder: mediaRecorder,
+  url: "ws://localhost:8080/mount",
+  info: { ... }
 });
-
-if (inputSampleRate !== 44100) {
-  encoder = new Webcast.Encoder.Resample({
-    encoder:    encoder,
-    samplerate: inputSampleRate
-  });
-}
-
-if (useWorker) {
-  encoder = new Webcast.Encoder.Asynchronous({
-    encoder: encoder,
-    scripts: ["http://bla.com/webcast.js", ...], // full path to required scripts for the worker.
-                                                 // usually includes requires encoders and webcast.js
-  });
-}
-
-var context = new AudioContext;
-
-var webcast = context.createWebcastSource(4096, 2);
-
-source.connect(webcast);
-webcast.connect(audioContext.destination);
-
-webcast.connectSocket(encoder, "ws://localhost:8080/mount");
 
 webcast.sendMetadata({
   title:  "My Awesome Stream",

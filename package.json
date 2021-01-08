@@ -6,20 +6,12 @@
     "Romain Beauxis <toots@rastageeks.org>"
   ],
   "description": "The webcast protocol is used to send multimedia data to a streaming server using websockets. It is designed to be implemented in browsers, thus providing a readily available browser client to stream local files and live media (webcam video, microphone audio).",
-  "main": "webcast.js",
-  "moduleType": [
-    "globals"
-  ],
-  "keywords": [
-    "webcast"
-  ],
-  "license": "none",
-  "ignore": [
-    "**/.*",
-    "node_modules",
-    "bower_components",
-    "src/bower_components",
-    "test",
-    "tests"
-  ]
+  "scripts": {
+    "build": "babel src -d lib"
+  },
+  "devDependencies": {
+    "@babel/cli": "^7.12.10",
+    "@babel/core": "^7.12.10",
+    "@babel/preset-env": "^7.12.11"
+  }
 }
