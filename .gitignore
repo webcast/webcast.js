@@ -2,3 +2,4 @@ server/node_modules
 websocket-test.*
 *.sw*
 node_modules
+yarn.lock

@@ -1,0 +1,9 @@
+{
+  "name": "webcast.js",
+  "version": "1.0.0",
+  "homepage": "https://github.com/webcast/webcast.js",
+  "authors": [
+    "Romain Beauxis <toots@rastageeks.org>"
+  ],
+  "description": "The webcast protocol is used to send multimedia data to a streaming server using websockets. It is designed to be implemented in browsers, thus providing a readily available browser client to stream local files and live media (webcam video, microphone audio)."
+}
