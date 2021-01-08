@@ -1,6 +1,5 @@
-window.Webcast = {
-  version: '1.0.0',
-  sendMedia: ({mediaRecorder, url: rawUrl, info}) => {
+class Socket {
+  constructor ({mediaRecorder, url: rawUrl, info}) {
     const parser = document.createElement("a");
     parser.href = rawUurl;
 
@@ -10,10 +9,7 @@ window.Webcast = {
     parser.username = parser.password = ""
     const url =  parser.href;
 
-    const socket = new WebSocket(url, "webcast");
-
-    socket.mime = mime;
-    socket.info = info;
+    this.socket = new WebSocket(url, "webcast");
 
     const hello = {
       mimeType: mediaRecorder.mimeType,
@@ -37,4 +33,16 @@ window.Webcast = {
       socket.close();
     };
   }
+
+  sendMetadata(data) {
+    this.socket.send(JSON.stringify({
+      type: "metadata",
+      data
+    }));
+  }
+};
+
+window.Webcast = {
+  version: '1.0.0',
+  Socket
 };

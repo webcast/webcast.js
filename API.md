@@ -30,12 +30,6 @@ webcast.sendMetadata({
   title:  "My Awesome Stream",
   artist: "The Dude"
 });
-
-//... Later ...
-webcast.close(function () {
-  console.log("connection closed!");
-});
-
 ```
 
 You can also look at the [example client code](https://github.com/webcast/webcaster/)
