@@ -3,7 +3,7 @@
    [
      "@babel/preset-env",
      {
-       "targets": "supports mediarecorder"
+       "targets": "supports mediarecorder and supports async-functions"
      }
    ]
  ]
