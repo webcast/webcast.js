@@ -18,19 +18,19 @@ class Socket {
       ...info
     }; 
 
-    socket.addEventListener("open", () =>
-      socket.send(JSON.stringify({
+    this.socket.addEventListener("open", () =>
+      this.socket.send(JSON.stringify({
         type: "hello",
         data: hello
       }))
     );
 
     mediaRecorder.ondataavailable = async e =>
-      socket.send(await e.data.arrayBuffer());
+      this.socket.send(await e.data.arrayBuffer());
 
     mediaRecorder.onstop = async e => {
-      socket.send(await e.data.arrayBuffer());
-      socket.close();
+      this.socket.send(await e.data.arrayBuffer());
+      this.socket.close();
     };
   }
 
