@@ -3,3 +3,4 @@ websocket-test.*
 *.sw*
 node_modules
 yarn.lock
+*~
