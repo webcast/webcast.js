@@ -51,7 +51,7 @@ exports.Socket = exports.version = void 0;
 exports.version = "1.0.1";
 var Socket = /** @class */ (function () {
     function Socket(_a) {
-        var mediaRecorder = _a.mediaRecorder, rawUrl = _a.url, info = _a.info;
+        var mediaRecorder = _a.mediaRecorder, rawUrl = _a.url, info = _a.info, onError = _a.onError, onOpen = _a.onOpen;
         var _this = this;
         var parser = document.createElement("a");
         parser.href = rawUrl;
@@ -60,13 +60,17 @@ var Socket = /** @class */ (function () {
         parser.username = parser.password = "";
         var url = parser.href;
         this.socket = new WebSocket(url, "webcast");
+        if (onError)
+            this.socket.onerror = onError;
         var hello = __assign(__assign(__assign({ mime: mediaRecorder.mimeType }, (user ? { user: user } : {})), (password ? { password: password } : {})), info);
-        this.socket.addEventListener("open", function () {
-            return _this.socket.send(JSON.stringify({
+        this.socket.onopen = function onopen(event) {
+            if (onOpen)
+                onOpen(event);
+            this.send(JSON.stringify({
                 type: "hello",
                 data: hello,
             }));
-        });
+        };
         mediaRecorder.ondataavailable = function (e) { return __awaiter(_this, void 0, void 0, function () {
             var data;
             return __generator(this, function (_a) {

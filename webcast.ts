@@ -7,10 +7,14 @@ export class Socket {
     mediaRecorder,
     url: rawUrl,
     info,
+    onError,
+    onOpen,
   }: {
     mediaRecorder: MediaRecorder
     url: string
     info: Record<string, unknown>
+    onError?: (_: Event) => void
+    onOpen?: (_: Event) => void
   }) {
     const parser = document.createElement("a")
     parser.href = rawUrl
@@ -23,6 +27,8 @@ export class Socket {
 
     this.socket = new WebSocket(url, "webcast")
 
+    if (onError) this.socket.onerror = onError
+
     const hello = {
       mime: mediaRecorder.mimeType,
       ...(user ? { user } : {}),
@@ -30,14 +36,15 @@ export class Socket {
       ...info,
     }
 
-    this.socket.addEventListener("open", () =>
-      this.socket.send(
+    this.socket.onopen = function onopen(event: Event) {
+      if (onOpen) onOpen(event)
+      this.send(
         JSON.stringify({
           type: "hello",
           data: hello,
         })
       )
-    )
+    }
 
     mediaRecorder.ondataavailable = async (e: BlobEvent) => {
       const data = await e.data.arrayBuffer()
