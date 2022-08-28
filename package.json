@@ -1,5 +1,5 @@
 {
-  "name": "webcast.js",
+  "name": "@webcast.js/socket",
   "version": "1.0.0",
   "homepage": "https://github.com/webcast/webcast.js",
   "main": "./dist/webcast.js",
