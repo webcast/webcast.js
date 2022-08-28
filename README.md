@@ -27,6 +27,8 @@ Alternatively, we provide a simple [webcam sender client](examples/webcam/).
 
 #### Server
 
+**⚠️ this example is outdated ⚠️**
+
 The `examples/server/` directory contains a demo server, written in [NodeJS](http://nodejs.org/). In order to run it, you
 will need a functional node install. Once this is done, you can execute `npm install` in the `server/` directory
 and then `cake run` and you should be good to go!
