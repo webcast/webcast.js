@@ -1,5 +1,5 @@
 class Socket {
-  constructor ({mediaRecorder, url: rawUrl, info}) {
+  constructor ({mediaRecorder, url: rawUrl, info, onopen = (_) => {}, onerror = (_) => {}}) {
     const parser = document.createElement("a");
     parser.href = rawUrl;
 
@@ -10,6 +10,7 @@ class Socket {
     const url =  parser.href;
 
     this.socket = new WebSocket(url, "webcast");
+    this.socket.onerror = onerror;
 
     const hello = {
       mime: mediaRecorder.mimeType,
@@ -18,12 +19,13 @@ class Socket {
       ...info
     }; 
 
-    this.socket.addEventListener("open", () =>
+    this.socket.onopen = (event) => {
+      onopen(event);
       this.socket.send(JSON.stringify({
         type: "hello",
         data: hello
       }))
-    );
+    };
 
     mediaRecorder.ondataavailable = e => this._sendData(e);
 
