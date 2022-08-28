@@ -68,9 +68,11 @@ export class Socket {
   }
 }
 
+export type WebcastSocket = typeof Socket
+
 declare global {
   interface Window {
-    Webcast: { Socket: typeof Socket; version: string }
+    Webcast: { Socket: WebcastSocket; version: string }
   }
 }
 

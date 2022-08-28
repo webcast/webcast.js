@@ -9,10 +9,11 @@ export declare class Socket {
     isConnected(): boolean;
     sendMetadata(data: Record<string, unknown>): void;
 }
+export declare type WebcastSocket = typeof Socket;
 declare global {
     interface Window {
         Webcast: {
-            Socket: typeof Socket;
+            Socket: WebcastSocket;
             version: string;
         };
     }

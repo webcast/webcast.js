@@ -8,6 +8,6 @@
     "strict": true,
     "esModuleInterop": true
   },
-  "include": ["webcast.ts"],
+  "include": ["webcast.ts", "examples/webcam/client.ts"],
   "exclude": ["node_modules", "public"]
 }
