@@ -1,1 +1,1 @@
-../../webcast.js
+../../dist/webcast.js
