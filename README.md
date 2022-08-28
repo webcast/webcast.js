@@ -23,6 +23,8 @@ in browsers, thus providing a readily available browser client to stream local f
 
 A fully functional client is available for testing at [webcast/webcaster](https://github.com/webcast/webcaster).
 
+Alternatively, we provide a simple [webcam sender client](examples/webcam/).
+
 #### Server
 
 The `examples/server/` directory contains a demo server, written in [NodeJS](http://nodejs.org/). In order to run it, you

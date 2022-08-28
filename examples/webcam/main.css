@@ -1,0 +1,27 @@
+body {
+  max-width: 500px;
+  margin: auto;
+  font-family: sans-serif;
+}
+
+h1 {
+  text-align: center;
+}
+
+#video {
+  width: 100%;
+  border: solid;
+  border-width: 1px;
+  color: lightgray;
+}
+
+#server-params {
+  background-color: whitesmoke;
+  border-radius: 5px;
+  padding: 20px;
+}
+
+input {
+  display: inline-block;
+  width: 100%;
+}

@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+    
+<html>
+  <head>
+    <meta charset="utf-8"/>
+    <title>Webcam webcaster</title>
+
+    <script src="webcast.js"></script>
+    <script src="client.js"></script>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="main.css">
+  </head>
+
+  <body>
+    <h1>Webcam webcaster</h1>
+    <p>
+      Simple demo example to send your webcam using webcaster. Press start
+      button to begin. A demo server
+      using <a href="https://www.liquidsoap.info/">Liquidsoap</a> is provided
+      in <tt>server.liq</tt>.
+    </p>
+
+    <p>
+      <button id="start" type="button">Start</button>
+      <button id="stop" type="button">Stop</button>
+    </p>
+
+    <p>
+      <video id="video" autoplay="true" controls muted></video>
+    </p>
+
+    <form id="server-params">
+      <label>Server</label>
+      <input id="server" value="localhost">
+      <label>Port</label>
+      <input id="port" type="number" value="8000">
+      <label>Mount</label>
+      <input id="mount" value="mount">
+      <label>User</label>
+      <input id="user" value="source">
+      <label>Pass</label>
+      <input id="password" value="hackme">
+    </form>
+  </body>
+</html>
