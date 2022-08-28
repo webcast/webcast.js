@@ -1,13 +1,13 @@
 const ensureInput = (value: unknown): HTMLInputElement => {
   if (!(value instanceof HTMLInputElement)) throw "Invalid HTML element!"
 
-  return value;
+  return value
 }
 
 const ensureVideo = (value: unknown): HTMLVideoElement => {
   if (!(value instanceof HTMLVideoElement)) throw "Invalid HTML element!"
 
-  return value;
+  return value
 }
 
 async function play() {
@@ -27,13 +27,13 @@ async function play() {
     videoBitsPerSecond: 3000000,
   })
 
-  const user = ensureInput(document.querySelector("#user")).value;
-  const password = ensureInput(document.querySelector("#password")).value;
-  const server = ensureInput(document.querySelector("#password")).value;
-  const port = ensureInput(document.querySelector("#port")).value;
-  const mount = ensureInput(document.querySelector("#mount")).value;
+  const user = ensureInput(document.querySelector("#user")).value
+  const password = ensureInput(document.querySelector("#password")).value
+  const server = ensureInput(document.querySelector("#password")).value
+  const port = ensureInput(document.querySelector("#port")).value
+  const mount = ensureInput(document.querySelector("#mount")).value
 
-  const url = `ws://${user}:${password}@${server}:${port}/${mount}`;
+  const url = `ws://${user}:${password}@${server}:${port}/${mount}`
 
   const ws = new window.Webcast.Socket({
     mediaRecorder,
