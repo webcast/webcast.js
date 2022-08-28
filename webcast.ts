@@ -1,6 +1,6 @@
 export const version = "1.0.1"
 
-export class Webcast {
+export class Socket {
   socket: WebSocket
 
   constructor({
@@ -68,4 +68,15 @@ export class Webcast {
   }
 }
 
-export default Webcast
+declare global {
+  interface Window {
+    Webcast: { Socket: typeof Socket; version: string }
+  }
+}
+
+if (window) {
+  window.Webcast = {
+    version: "1.0.0",
+    Socket,
+  }
+}

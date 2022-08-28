@@ -47,10 +47,10 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
     }
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.Webcast = exports.version = void 0;
+exports.Socket = exports.version = void 0;
 exports.version = "1.0.1";
-var Webcast = /** @class */ (function () {
-    function Webcast(_a) {
+var Socket = /** @class */ (function () {
+    function Socket(_a) {
         var mediaRecorder = _a.mediaRecorder, rawUrl = _a.url, info = _a.info;
         var _this = this;
         var parser = document.createElement("a");
@@ -87,16 +87,21 @@ var Webcast = /** @class */ (function () {
             }
         };
     }
-    Webcast.prototype.isConnected = function () {
+    Socket.prototype.isConnected = function () {
         return this.socket.readyState === WebSocket.OPEN;
     };
-    Webcast.prototype.sendMetadata = function (data) {
+    Socket.prototype.sendMetadata = function (data) {
         this.socket.send(JSON.stringify({
             type: "metadata",
             data: data,
         }));
     };
-    return Webcast;
+    return Socket;
 }());
-exports.Webcast = Webcast;
-exports.default = Webcast;
+exports.Socket = Socket;
+if (window) {
+    window.Webcast = {
+        version: "1.0.0",
+        Socket: Socket,
+    };
+}
