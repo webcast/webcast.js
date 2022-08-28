@@ -2,7 +2,7 @@
 
 The `webcast` protocol is defined to stream binary multimedia data and text metadata through a websocket.
 
-A websocket for the `webcast` protocol MUST be initiated by passing the second argument as `"websocket"`:
+A websocket for the `webcast` protocol MUST be initiated by passing `"webcast"` as second argument:
 ```
 var websocket = new WebSocket("ws://localhost:8080/mount", "webcast");
 ```
