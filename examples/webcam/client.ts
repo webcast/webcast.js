@@ -29,7 +29,7 @@ async function play() {
 
   const user = ensureInput(document.querySelector("#user")).value
   const password = ensureInput(document.querySelector("#password")).value
-  const server = ensureInput(document.querySelector("#password")).value
+  const server = ensureInput(document.querySelector("#server")).value
   const port = ensureInput(document.querySelector("#port")).value
   const mount = ensureInput(document.querySelector("#mount")).value
 

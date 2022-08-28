@@ -71,7 +71,7 @@ function play() {
                     });
                     user = ensureInput(document.querySelector("#user")).value;
                     password = ensureInput(document.querySelector("#password")).value;
-                    server = ensureInput(document.querySelector("#password")).value;
+                    server = ensureInput(document.querySelector("#server")).value;
                     port = ensureInput(document.querySelector("#port")).value;
                     mount = ensureInput(document.querySelector("#mount")).value;
                     url = "ws://".concat(user, ":").concat(password, "@").concat(server, ":").concat(port, "/").concat(mount);
