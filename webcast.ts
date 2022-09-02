@@ -75,15 +75,13 @@ export class Socket {
   }
 }
 
-export type WebcastSocket = typeof Socket
-
 declare global {
   interface Window {
-    Webcast: { Socket: WebcastSocket; version: string }
+    Webcast: { Socket: typeof Socket; version: string }
   }
 }
 
-if (window) {
+if (typeof window !== "undefined") {
   window.Webcast = {
     version: "1.0.0",
     Socket,
