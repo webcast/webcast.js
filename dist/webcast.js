@@ -1,62 +1,89 @@
-"use strict";
-var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
-    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
-    return new (P || (P = Promise))(function (resolve, reject) {
-        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
-        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
-        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
-        step((generator = generator.apply(thisArg, _arguments || [])).next());
-    });
+export const version = "2.0.0";
+// A literal "%" in a password is not a valid escape: keep it as typed.
+const decode = (value) => {
+    try {
+        return decodeURIComponent(value);
+    }
+    catch {
+        return value;
+    }
 };
-Object.defineProperty(exports, "__esModule", { value: true });
-exports.Socket = exports.version = void 0;
-exports.version = "1.0.1";
-class Socket {
-    constructor({ mediaRecorder, url: rawUrl, info, onError, onOpen, }) {
-        const parser = document.createElement("a");
-        parser.href = rawUrl;
-        const user = parser.username;
-        const password = parser.password;
-        parser.username = parser.password = "";
-        const url = parser.href;
-        this.socket = new WebSocket(url, "webcast");
-        if (onError)
-            this.socket.onerror = onError;
-        const hello = Object.assign(Object.assign(Object.assign({ mime: mediaRecorder.mimeType }, (user ? { user } : {})), (password ? { password } : {})), info);
-        this.socket.onopen = function onopen(event) {
-            if (onOpen)
-                onOpen(event);
-            this.send(JSON.stringify({
-                type: "hello",
-                data: hello,
-            }));
+const extractCredentials = (rawUrl) => {
+    // Relative URLs resolve against the page, as with the WebSocket constructor.
+    const url = new URL(rawUrl, globalThis.location?.href);
+    const user = decode(url.username);
+    const password = decode(url.password);
+    url.username = url.password = "";
+    return { url: url.href, user, password };
+};
+export class Socket {
+    constructor(options) {
+        this.open = false;
+        this.closing = false;
+        this.pending = [];
+        this.options = options;
+        const { mediaRecorder, url: rawUrl } = options;
+        const { url, user, password } = extractCredentials(rawUrl);
+        mediaRecorder.ondataavailable = ({ data }) => {
+            if (data.size > 0)
+                this.send(data);
         };
-        mediaRecorder.ondataavailable = (e) => __awaiter(this, void 0, void 0, function* () {
-            const data = yield e.data.arrayBuffer();
-            if (this.isConnected()) {
-                this.socket.send(data);
+        mediaRecorder.onstop = () => this.close();
+        const socket = new WebSocket(url, "webcast");
+        socket.onopen = event => {
+            if (socket.protocol !== "webcast") {
+                socket.close(4400, "The server did not select the webcast subprotocol.");
+                return;
             }
-        });
-        mediaRecorder.onstop = (e) => {
-            if (this.isConnected()) {
-                this.socket.close();
-            }
+            socket.send(this.hello({ user, password }));
+            this.open = true;
+            for (const data of this.pending)
+                socket.send(data);
+            this.pending = [];
+            this.options.onOpen?.(event);
         };
+        socket.onerror = event => this.options.onError?.(event);
+        socket.onclose = event => {
+            this.open = false;
+            this.pending = [];
+            if (mediaRecorder.state !== "inactive") {
+                this.closing = true;
+                mediaRecorder.stop();
+            }
+            this.options.onClose?.(event);
+        };
+        this.socket = socket;
+    }
+    // Built at open time: a recorder created without a mimeType only reports one once started.
+    hello({ user, password }) {
+        const data = {
+            mime: this.options.mediaRecorder.mimeType,
+            ...(user ? { user } : {}),
+            ...(password ? { password } : {}),
+            ...this.options.info,
+        };
+        return JSON.stringify({ type: "hello", data });
+    }
+    // Media recorded before the connection opens is queued: its first chunk holds the container header.
+    send(data) {
+        if (this.open)
+            this.socket.send(data);
+        else if (!this.closing)
+            this.pending.push(data);
     }
     isConnected() {
         return this.socket.readyState === WebSocket.OPEN;
     }
-    sendMetadata(data) {
-        this.socket.send(JSON.stringify({
-            type: "metadata",
-            data,
-        }));
+    /** Bytes not sent yet, including data queued until the connection opens. */
+    get bufferedAmount() {
+        const pending = this.pending.reduce((total, data) => total + (typeof data === "string" ? new TextEncoder().encode(data).length : data.size), 0);
+        return this.socket.bufferedAmount + pending;
     }
-}
-exports.Socket = Socket;
-if (typeof window !== "undefined") {
-    window.Webcast = {
-        version: "1.0.0",
-        Socket,
-    };
+    sendMetadata(data) {
+        this.send(JSON.stringify({ type: "metadata", data }));
+    }
+    close() {
+        this.closing = true;
+        this.socket.close(1000);
+    }
 }

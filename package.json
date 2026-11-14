@@ -1,16 +1,30 @@
 {
   "name": "@webcast.js/socket",
-  "version": "1.1.0",
+  "version": "2.0.0",
   "homepage": "https://github.com/webcast/webcast.js",
+  "type": "module",
   "main": "./dist/webcast.js",
   "types": "./dist/webcast.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/webcast.d.ts",
+      "default": "./dist/webcast.js"
+    }
+  },
+  "files": [
+    "dist/webcast.js",
+    "dist/webcast.d.ts"
+  ],
   "scripts": {
     "build": "tsc",
     "lint": "eslint '**/*.{ts,json}' --fix",
     "format": "prettier '**/*.{ts,json}' .prettierrc --write",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "test": "tsc && node --test test/*.test.js"
   },
-  "authors": ["Romain Beauxis <toots@rastageeks.org>"],
+  "authors": [
+    "Romain Beauxis <toots@rastageeks.org>"
+  ],
   "description": "The webcast protocol is used to send multimedia data to a streaming server using websockets. It is designed to be implemented in browsers, thus providing a readily available browser client to stream local files and live media (webcam video, microphone audio).",
   "license": "MIT",
   "devDependencies": {

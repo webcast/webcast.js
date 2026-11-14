@@ -1,13 +1,22 @@
 {
   "compilerOptions": {
-    "target": "es6",
-    "module": "commonjs",
-    "lib": ["es2017", "es7", "es6", "dom"],
+    "target": "es2020",
+    "module": "es2020",
+    "lib": [
+      "es2020",
+      "dom"
+    ],
     "declaration": true,
     "outDir": "dist",
     "strict": true,
-    "esModuleInterop": true
+    "esModuleInterop": true,
+    "moduleResolution": "node"
   },
-  "include": ["webcast.ts", "examples/webcam/client.ts"],
-  "exclude": ["node_modules", "public"]
+  "include": [
+    "webcast.ts"
+  ],
+  "exclude": [
+    "node_modules",
+    "public"
+  ]
 }
