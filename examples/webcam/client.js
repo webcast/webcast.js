@@ -35,7 +35,7 @@ async function play() {
   const port = ensureInput(document.querySelector("#port")).value
   const mount = ensureInput(document.querySelector("#mount")).value
 
-  const url = `ws://${user}:${password}@${server}:${port}/${mount}`
+  const url = `ws://${encodeURIComponent(user)}:${encodeURIComponent(password)}@${server}:${port}/${mount}`
 
   new Socket({
     mediaRecorder,

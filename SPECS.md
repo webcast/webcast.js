@@ -4,12 +4,6 @@ The webcast protocol carries a live media stream and its metadata from a source 
 [WebSocket](https://www.rfc-editor.org/rfc/rfc6455) connection. It is designed so that a web browser can act as the
 source client, encoding with the [MediaRecorder API](https://www.w3.org/TR/mediastream-recording/).
 
-This document defines two versions of the protocol:
-
-- **v1**, negotiated with the `webcast` subprotocol.
-- **v2**, negotiated with the `webcast.v2` subprotocol. It adds a `ready` message from the server
-  ([Section 4.2](#42-ready)). Everything else is shared with v1.
-
 The key words "MUST", "MUST NOT", "REQUIRED", "SHALL", "SHALL NOT", "SHOULD", "SHOULD NOT", "RECOMMENDED", "MAY", and
 "OPTIONAL" in this document are to be interpreted as described in [BCP 14](https://www.rfc-editor.org/info/bcp14)
 ([RFC 2119](https://www.rfc-editor.org/rfc/rfc2119), [RFC 8174](https://www.rfc-editor.org/rfc/rfc8174)) when, and
@@ -27,19 +21,9 @@ only when, they appear in all capitals, as shown here.
 
 The client connects to a `ws://` or `wss://` URL. The path of the URL identifies the mount.
 
-The client MUST offer one or more of the `webcast.v2` and `webcast` subprotocols in the `Sec-WebSocket-Protocol` header
-of the opening handshake. A client that supports v2 SHOULD offer `webcast.v2` first and `webcast` second.
-
-The server MUST select exactly one of the offered subprotocols that it supports. If it supports none of them, it MUST
-NOT select a subprotocol, and the client MUST then fail the connection, as described in
-[RFC 6455, Section 4.1](https://www.rfc-editor.org/rfc/rfc6455#section-4.1). A server that implements v2 SHOULD also
-implement v1.
-
-> Some deployed v1 servers accept the handshake only when the `Sec-WebSocket-Protocol` header is exactly `webcast`, and
-> reject a list of subprotocols. A client that offers both versions MAY retry once, offering only `webcast`, when the
-> handshake fails.
-
-After the handshake, the protocol in use is the subprotocol selected by the server.
+The client MUST offer the `webcast` subprotocol in the `Sec-WebSocket-Protocol` header of the opening handshake, and
+the server MUST select it. If the server does not select it, the client MUST fail the connection, as described in
+[RFC 6455, Section 4.1](https://www.rfc-editor.org/rfc/rfc6455#section-4.1).
 
 ## 3. Messages
 
@@ -127,26 +111,7 @@ Example:
 }
 ```
 
-### 4.2 `ready`
-
-Direction: server to client. **v2 only.**
-
-The server MUST send a `ready` message once it has accepted the `hello` message, that is, after authentication
-succeeded and the mount is ready to receive media. The `data` member is OPTIONAL and its content is not defined by this
-version of the specification.
-
-In v2, the client MUST NOT send any message other than `hello` before it has received `ready`. The server MUST close
-the connection with code `4400` if it receives any other message before it has sent `ready`.
-
-In v1, there is no `ready` message. The client MAY send media and metadata right after the `hello` message.
-
-Example:
-
-```json
-{ "type": "ready" }
-```
-
-### 4.3 `metadata`
+### 4.2 `metadata`
 
 Direction: client to server.
 
@@ -185,7 +150,7 @@ MIME type declared in the `hello` message.
 - The stream MUST be sent from its beginning: its first bytes are the container header or initialization segment. A
   client that restarts its encoder MUST open a new connection.
 - The client MUST send binary messages in the order the encoder produced them.
-- The client MUST NOT send binary messages before the `hello` message, or, in v2, before it has received `ready`.
+- The client MUST NOT send binary messages before the `hello` message.
 
 ## 6. Closing and errors
 

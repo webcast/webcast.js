@@ -1,5 +1,4 @@
 export declare const version = "2.0.0";
-export type Protocol = "webcast.v2" | "webcast";
 export type HelloInfo = {
     audio?: {
         channels?: number;
@@ -25,25 +24,21 @@ export type SocketOptions = {
     mediaRecorder: MediaRecorder;
     url: string;
     info?: HelloInfo;
-    protocols?: Protocol[];
     onOpen?: (event: Event) => void;
-    onReady?: () => void;
     onError?: (event: Event) => void;
     onClose?: (event: CloseEvent) => void;
 };
 export declare class Socket {
-    socket: WebSocket;
+    readonly socket: WebSocket;
     private options;
-    private ready;
+    private open;
     private closing;
     private pending;
     constructor(options: SocketOptions);
-    private connect;
     private hello;
-    private setReady;
     private send;
     isConnected(): boolean;
-    isReady(): boolean;
+    /** Bytes not sent yet, including data queued until the connection opens. */
     get bufferedAmount(): number;
     sendMetadata(data: Metadata): void;
     close(): void;
