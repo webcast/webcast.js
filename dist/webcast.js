@@ -1,62 +1,108 @@
-"use strict";
-var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
-    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
-    return new (P || (P = Promise))(function (resolve, reject) {
-        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
-        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
-        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
-        step((generator = generator.apply(thisArg, _arguments || [])).next());
-    });
+export const version = "2.0.0";
+const extractCredentials = (rawUrl) => {
+    const url = new URL(rawUrl);
+    const user = decodeURIComponent(url.username);
+    const password = decodeURIComponent(url.password);
+    url.username = url.password = "";
+    return { url: url.href, user, password };
 };
-Object.defineProperty(exports, "__esModule", { value: true });
-exports.Socket = exports.version = void 0;
-exports.version = "1.0.1";
-class Socket {
-    constructor({ mediaRecorder, url: rawUrl, info, onError, onOpen, }) {
-        const parser = document.createElement("a");
-        parser.href = rawUrl;
-        const user = parser.username;
-        const password = parser.password;
-        parser.username = parser.password = "";
-        const url = parser.href;
-        this.socket = new WebSocket(url, "webcast");
-        if (onError)
-            this.socket.onerror = onError;
-        const hello = Object.assign(Object.assign(Object.assign({ mime: mediaRecorder.mimeType }, (user ? { user } : {})), (password ? { password } : {})), info);
-        this.socket.onopen = function onopen(event) {
-            if (onOpen)
-                onOpen(event);
-            this.send(JSON.stringify({
-                type: "hello",
-                data: hello,
-            }));
+export class Socket {
+    constructor(options) {
+        this.ready = false;
+        this.closing = false;
+        this.pending = [];
+        this.options = options;
+        const { mediaRecorder, url: rawUrl, protocols = ["webcast.v2", "webcast"] } = options;
+        const { url, user, password } = extractCredentials(rawUrl);
+        mediaRecorder.ondataavailable = ({ data }) => {
+            if (data.size > 0)
+                this.send(data);
         };
-        mediaRecorder.ondataavailable = (e) => __awaiter(this, void 0, void 0, function* () {
-            const data = yield e.data.arrayBuffer();
-            if (this.isConnected()) {
-                this.socket.send(data);
+        mediaRecorder.onstop = () => this.close();
+        this.socket = this.connect(url, protocols, { user, password });
+    }
+    connect(url, protocols, credentials) {
+        const socket = new WebSocket(url, protocols);
+        let opened = false;
+        // Some v1 servers reject a list of subprotocols: retry with v1 alone.
+        const fallback = protocols.length > 1 && protocols.includes("webcast");
+        socket.onopen = event => {
+            opened = true;
+            this.options.onOpen?.(event);
+            socket.send(this.hello(credentials));
+            if (socket.protocol !== "webcast.v2")
+                this.setReady();
+        };
+        socket.onmessage = ({ data }) => {
+            if (socket.protocol !== "webcast.v2" || typeof data !== "string")
+                return;
+            try {
+                if (JSON.parse(data)?.type === "ready")
+                    this.setReady();
             }
-        });
-        mediaRecorder.onstop = (e) => {
-            if (this.isConnected()) {
-                this.socket.close();
+            catch {
+                // Malformed server messages are ignored, like unknown ones.
             }
         };
+        socket.onerror = event => {
+            if (opened || this.closing || !fallback)
+                this.options.onError?.(event);
+        };
+        socket.onclose = event => {
+            if (!opened && !this.closing && fallback) {
+                this.socket = this.connect(url, ["webcast"], credentials);
+                return;
+            }
+            this.ready = false;
+            this.pending = [];
+            if (this.options.mediaRecorder.state !== "inactive") {
+                this.closing = true;
+                this.options.mediaRecorder.stop();
+            }
+            this.options.onClose?.(event);
+        };
+        return socket;
+    }
+    // Built at open time: a recorder created without a mimeType only reports one once started.
+    hello({ user, password }) {
+        const data = {
+            mime: this.options.mediaRecorder.mimeType,
+            ...(user ? { user } : {}),
+            ...(password ? { password } : {}),
+            ...this.options.info,
+        };
+        return JSON.stringify({ type: "hello", data });
+    }
+    setReady() {
+        if (this.ready)
+            return;
+        this.ready = true;
+        for (const data of this.pending)
+            this.socket.send(data);
+        this.pending = [];
+        this.options.onReady?.();
+    }
+    // Media recorded before the server is ready is queued: its first chunk holds the container header.
+    send(data) {
+        if (this.ready)
+            this.socket.send(data);
+        else if (!this.closing)
+            this.pending.push(data);
     }
     isConnected() {
         return this.socket.readyState === WebSocket.OPEN;
     }
-    sendMetadata(data) {
-        this.socket.send(JSON.stringify({
-            type: "metadata",
-            data,
-        }));
+    isReady() {
+        return this.ready;
     }
-}
-exports.Socket = Socket;
-if (typeof window !== "undefined") {
-    window.Webcast = {
-        version: "1.0.0",
-        Socket,
-    };
+    get bufferedAmount() {
+        return this.socket.bufferedAmount;
+    }
+    sendMetadata(data) {
+        this.send(JSON.stringify({ type: "metadata", data }));
+    }
+    close() {
+        this.closing = true;
+        this.socket.close(1000);
+    }
 }

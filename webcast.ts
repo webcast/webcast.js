@@ -1,89 +1,147 @@
-export const version = "1.0.1"
+export const version = "2.0.0"
+
+export type Protocol = "webcast.v2" | "webcast"
+
+export type HelloInfo = {
+  audio?: { channels?: number; samplerate?: number; bitrate?: number; encoder?: string }
+  video?: { width?: number; height?: number; framerate?: number; bitrate?: number; encoder?: string }
+  name?: string
+  description?: string
+  genre?: string
+  url?: string
+  [key: string]: unknown
+}
+
+export type Metadata = Record<string, string>
+
+export type SocketOptions = {
+  mediaRecorder: MediaRecorder
+  url: string
+  info?: HelloInfo
+  protocols?: Protocol[]
+  onOpen?: (event: Event) => void
+  onReady?: () => void
+  onError?: (event: Event) => void
+  onClose?: (event: CloseEvent) => void
+}
+
+type Credentials = { user: string; password: string }
+
+const extractCredentials = (rawUrl: string) => {
+  const url = new URL(rawUrl)
+  const user = decodeURIComponent(url.username)
+  const password = decodeURIComponent(url.password)
+  url.username = url.password = ""
+  return { url: url.href, user, password }
+}
 
 export class Socket {
   socket: WebSocket
 
-  constructor({
-    mediaRecorder,
-    url: rawUrl,
-    info,
-    onError,
-    onOpen,
-  }: {
-    mediaRecorder: MediaRecorder
-    url: string
-    info: Record<string, unknown>
-    onError?: (_: Event) => void
-    onOpen?: (_: Event) => void
-  }) {
-    const parser = document.createElement("a")
-    parser.href = rawUrl
+  private options: SocketOptions
+  private ready = false
+  private closing = false
+  private pending: (Blob | string)[] = []
 
-    const user = parser.username
-    const password = parser.password
+  constructor(options: SocketOptions) {
+    this.options = options
+    const { mediaRecorder, url: rawUrl, protocols = ["webcast.v2", "webcast"] } = options
+    const { url, user, password } = extractCredentials(rawUrl)
 
-    parser.username = parser.password = ""
-    const url = parser.href
+    mediaRecorder.ondataavailable = ({ data }: BlobEvent) => {
+      if (data.size > 0) this.send(data)
+    }
+    mediaRecorder.onstop = () => this.close()
 
-    this.socket = new WebSocket(url, "webcast")
+    this.socket = this.connect(url, protocols, { user, password })
+  }
 
-    if (onError) this.socket.onerror = onError
+  private connect(url: string, protocols: Protocol[], credentials: Credentials): WebSocket {
+    const socket = new WebSocket(url, protocols)
+    let opened = false
+    // Some v1 servers reject a list of subprotocols: retry with v1 alone.
+    const fallback = protocols.length > 1 && protocols.includes("webcast")
 
-    const hello = {
-      mime: mediaRecorder.mimeType,
+    socket.onopen = event => {
+      opened = true
+      this.options.onOpen?.(event)
+      socket.send(this.hello(credentials))
+      if (socket.protocol !== "webcast.v2") this.setReady()
+    }
+
+    socket.onmessage = ({ data }: MessageEvent) => {
+      if (socket.protocol !== "webcast.v2" || typeof data !== "string") return
+      try {
+        if (JSON.parse(data)?.type === "ready") this.setReady()
+      } catch {
+        // Malformed server messages are ignored, like unknown ones.
+      }
+    }
+
+    socket.onerror = event => {
+      if (opened || this.closing || !fallback) this.options.onError?.(event)
+    }
+
+    socket.onclose = event => {
+      if (!opened && !this.closing && fallback) {
+        this.socket = this.connect(url, ["webcast"], credentials)
+        return
+      }
+      this.ready = false
+      this.pending = []
+      if (this.options.mediaRecorder.state !== "inactive") {
+        this.closing = true
+        this.options.mediaRecorder.stop()
+      }
+      this.options.onClose?.(event)
+    }
+
+    return socket
+  }
+
+  // Built at open time: a recorder created without a mimeType only reports one once started.
+  private hello({ user, password }: Credentials) {
+    const data = {
+      mime: this.options.mediaRecorder.mimeType,
       ...(user ? { user } : {}),
       ...(password ? { password } : {}),
-      ...info,
+      ...this.options.info,
     }
+    return JSON.stringify({ type: "hello", data })
+  }
 
-    this.socket.onopen = function onopen(event: Event) {
-      if (onOpen) onOpen(event)
-      this.send(
-        JSON.stringify({
-          type: "hello",
-          data: hello,
-        })
-      )
-    }
+  private setReady() {
+    if (this.ready) return
+    this.ready = true
+    for (const data of this.pending) this.socket.send(data)
+    this.pending = []
+    this.options.onReady?.()
+  }
 
-    mediaRecorder.ondataavailable = async (e: BlobEvent) => {
-      const data = await e.data.arrayBuffer()
-
-      if (this.isConnected()) {
-        this.socket.send(data)
-      }
-    }
-
-    mediaRecorder.onstop = (e: Event) => {
-      if (this.isConnected()) {
-        this.socket.close()
-      }
-    }
+  // Media recorded before the server is ready is queued: its first chunk holds the container header.
+  private send(data: Blob | string) {
+    if (this.ready) this.socket.send(data)
+    else if (!this.closing) this.pending.push(data)
   }
 
   isConnected() {
     return this.socket.readyState === WebSocket.OPEN
   }
 
-  sendMetadata(data: Record<string, unknown>) {
-    this.socket.send(
-      JSON.stringify({
-        type: "metadata",
-        data,
-      })
-    )
+  isReady() {
+    return this.ready
   }
-}
 
-declare global {
-  interface Window {
-    Webcast: { Socket: typeof Socket; version: string }
+  get bufferedAmount() {
+    return this.socket.bufferedAmount
   }
-}
 
-if (typeof window !== "undefined") {
-  window.Webcast = {
-    version: "1.0.0",
-    Socket,
+  sendMetadata(data: Metadata) {
+    this.send(JSON.stringify({ type: "metadata", data }))
+  }
+
+  close() {
+    this.closing = true
+    this.socket.close(1000)
   }
 }

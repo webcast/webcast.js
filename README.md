@@ -8,7 +8,7 @@ Documentation
 -------------
 
 <table>
-  <tr><td><img src="https://rawgithub.com/savonet/webcast/master/misc/webcast.svg" alt="Webcast Flowchart" title="Webcast Flowchart"/></td></tr>
+  <tr><td><img src="misc/webcast.svg" alt="Webcast Flowchart" title="Webcast Flowchart"/></td></tr>
   <tr><td>The Webcast Flowchart</td></tr>
 </table>
 
